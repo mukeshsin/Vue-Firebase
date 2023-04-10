@@ -1,0 +1,50 @@
+* {
+  box-sizing: border-box;
+}
+
+.para-head{
+    color:#fff
+}
+.form-container {
+    width: 850px;
+    height: 100%;
+    margin: auto;
+    border: 6px solid grey;
+    border-radius: 3px;
+    background-image: url("https://m.blog.hu/hr/hrdoktor/image/blur-building-city-1013516.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  
+  
+form {
+  width: 700px;
+  margin: 0 auto;
+}
+form label {
+  display: flex;
+  margin-top: 15px;
+  font-size: 18px;
+  margin-bottom: 5px;
+  color:white
+}
+form input {
+  width: 100%;
+  padding: 7px;
+  border: 1px solid gray;
+  border-radius: 6px;
+  outline: none;
+  font-size: 20px;
+}
+
+.submitBtn {
+  width: 500px;
+  height: 35px;
+  margin-top: 20px;
+  border: none;
+  background-color: #49c1a2;
+  color: white;
+  font-size: 18px;
+  margin-bottom: 20px;
+}
