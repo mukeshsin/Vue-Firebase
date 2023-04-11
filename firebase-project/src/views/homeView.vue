@@ -1,9 +1,9 @@
 <template>
-  <h1>Login</h1>
+  <h1>This is firebase authentication</h1>
 </template>
 <script>
 export default {
-  name: "login-page",
+  name: "homeView",
   setup() {},
 };
 </script>
