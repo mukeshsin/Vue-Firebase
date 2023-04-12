@@ -34,7 +34,7 @@ form label {
   margin-top: 15px;
   font-size: 21px;
   margin-bottom: 5px;
-  color: #878ca0;
+  color: white;
 }
 .fixCss{
   width:100%;
@@ -69,3 +69,5 @@ form input {
   letter-spacing: 5px;
   
 }
+
+
