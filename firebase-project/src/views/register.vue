@@ -82,7 +82,7 @@
       <div>
         <button type="submit" class="submitBtn">REGISTER NOW</button>
       </div>
-      <div v-if="error">{{error}}</div>
+      <div v-if="error">{{ error }}</div>
     </Form>
   </div>
 </template>
@@ -90,9 +90,8 @@
 <script>
 import { Form, Field, ErrorMessage } from "vee-validate";
 import { ref } from "vue";
-import {useStore} from'vuex'
-import {useRouter} from 'vue-router'
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+import { useStore } from "vuex";
+import { useRouter } from "vue-router";
 
 
 export default {
@@ -103,39 +102,33 @@ export default {
     ErrorMessage,
   },
   setup() {
-    const email = ref('');
-    const password = ref('');
-    const firstName= ref('')
-    const lastName= ref('')
-    const error =ref(null)
+    const email = ref("");
+    const password = ref("");
+    const firstName = ref("");
+    const lastName = ref("");
+    const error = ref(null);
+    const store = useStore();
+    const router = useRouter();
 
-    const store= useStore()
-    const router= useRouter()
+    const handleSubmit = async () => {
+      try {
+        // Register the user with Firebase Authentication
+        await store.dispatch("signup", {
+          email: email.value,
+          password: password.value,
+          firstName: firstName.value,
+          lastName: lastName.value,
+        });
 
-  const handleSubmit = async () => {
-  try {
-    // Register the user with Firebase Authentication
-    await store.dispatch("signup", {
-      email: email.value,
-      password: password.value,
-    });
+   
 
-    // Save the user's extra details in Firestore
-    const db = getFirestore();
-    const userRef = doc(db, "users", store.state.user.uid);
-    await setDoc(userRef, {
-      firstName: firstName.value,
-      lastName: lastName.value,
-    });
-
-    // Redirect the user to the login page
-    router.push("/login");
-  } catch (error) {
-    console.log(error);
-    error.value = error.message;
-  }
-};
-
+        // Redirect the user to the login page
+        router.push("/login");
+      } catch (err) {
+        console.log(err);
+        error.value = err.message;
+      }
+    };
 
     // const validateEmail = (value) => {
     //   // if the field is empty
@@ -227,7 +220,7 @@ export default {
       lastName,
       handleSubmit,
       error,
-      
+
       // validateEmail,
       // validatefirstName,
       // validatelastName,

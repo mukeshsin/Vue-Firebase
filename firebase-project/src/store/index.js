@@ -1,14 +1,8 @@
 import { createStore } from "vuex";
-//firebase imports
-import{auth,db} from '../firebase/config'
-import{
-  createUserWithEmailAndPassword
-} from 'firebase/auth'
-import {
-  collection,
-  doc,
-  setDoc
-} from 'firebase/firestore'
+import { auth } from "../firebase/config";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { getAuth, updateProfile } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
 
 export default createStore({
   state: {
@@ -22,32 +16,40 @@ export default createStore({
     },
   },
   actions: {
-    async signup({ commit }, { email, password ,firstName,lastName }) {
-      console.log('signup action')
+    async signup({ commit }, { email, password, firstName, lastName }) {
+      console.log("signup action");
 
       try {
-        // async code
-        const res = await createUserWithEmailAndPassword(auth,email,password)
+        // Register the user with Firebase Authentication
+        const res = await createUserWithEmailAndPassword(auth, email, password);
 
-        if(res && res.user){
-          // Update the user's display name
-         auth.currentUser.updateProfile({
-            displayName: `${firstName} ${lastName}`
-          })
+        if (res && res.user) {
+          const auth = getAuth();
+          updateProfile(auth.currentUser, {
+            displayName: `${firstName},${lastName}`,
+          });
 
-          // Save the user's first name and last name to the database
-          const userRef = doc(collection(db, 'users'), res.user.uid)
+          // Add data to Firestore
+          const db = getFirestore();
+          const userRef = doc(db, "users", res.user.uid);
           await setDoc(userRef, {
-            firstName,
-            lastName
-          })
-          commit('setUser',res.user)
+            firstName: firstName,
+            lastName: lastName,
+          });
+
+          // Update the user state
+          const user = {
+            uid: res.user.uid,
+            email: res.user.email,
+            displayName: `${firstName} ${lastName}`,
+          };
+          commit("setUser", user);
         } else {
-          throw new Error('signup unsuccessfully')
+          throw new Error("signup unsuccessfully");
         }
       } catch (error) {
-        console.error(error.message)
-        throw new Error(error.message)
+        console.error(error.message);
+        throw new Error(error.message);
       }
     },
   },
