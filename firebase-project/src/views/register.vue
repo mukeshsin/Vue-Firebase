@@ -41,13 +41,13 @@
       <ErrorMessage class="validateErr" name="mobileNumber" />
       <label>Profile Photo</label>
       <Field
-        v-model="photo"
-        name="photo"
+        v-model="profilePhoto"
+        name="profilePhoto"
         type="file"
         class="form-control"
-        :rules="validatephoto"
+        :rules="validateprofilePhoto"
       />
-      <ErrorMessage class="validateErr" name="photo" />
+      <ErrorMessage class="validateErr" name="profilePhoto" />
       <label>Email</label>
       <Field
         v-model="email"
@@ -93,7 +93,6 @@ import { ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 
-
 export default {
   name: "register-page",
   components: {
@@ -106,6 +105,9 @@ export default {
     const password = ref("");
     const firstName = ref("");
     const lastName = ref("");
+    const mobileNumber = ref("");
+    const profilePhoto = ref("");
+    const confirmPassword = ref("");
     const error = ref(null);
     const store = useStore();
     const router = useRouter();
@@ -113,14 +115,16 @@ export default {
     const handleSubmit = async () => {
       try {
         // Register the user with Firebase Authentication
+
         await store.dispatch("signup", {
           email: email.value,
           password: password.value,
           firstName: firstName.value,
           lastName: lastName.value,
+          mobileNumber: mobileNumber.value,
+          profilePhoto: profilePhoto.value,
+          confirmPassword: confirmPassword.value,
         });
-
-   
 
         // Redirect the user to the login page
         router.push("/login");
@@ -130,104 +134,109 @@ export default {
       }
     };
 
-    // const validateEmail = (value) => {
-    //   // if the field is empty
-    //   if (!value) {
-    //     return "This field is required";
-    //   }
-    //   // if the field is not a valid email
-    //   const regex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
-    //   if (!regex.test(value)) {
-    //     return "This field must be a valid email";
-    //   }
-    //   // All is good
-    //   return true;
-    // };
+    const validateEmail = (value) => {
+      // if the field is empty
+      if (!value) {
+        return "This field is required";
+      }
+      // if the field is not a valid email
+      const regex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
+      if (!regex.test(value)) {
+        return "This field must be a valid email";
+      }
+      // All is good
+      return true;
+    };
 
-    // const validatefirstName = (value) => {
-    //   // if the field is empty
-    //   if (!value) {
-    //     return "This field is required";
-    //   }
-    //   // if firstName is less than 4 characters
-    //   if (value.length < 4) {
-    //     return "The first name should be at least 4 characters long";
-    //   }
-    //   // All is good
-    //   return true;
-    // };
+    const validatefirstName = (value) => {
+      // if the field is empty
+      if (!value) {
+        return "This field is required";
+      }
+      // if firstName is less than 4 characters
+      if (value.length < 4) {
+        return "The first name should be at least 4 characters long";
+      }
+      // All is good
+      return true;
+    };
 
-    // const validatelastName = (value) => {
-    //   if (!value) {
-    //     return "This field is required";
-    //   }
-    //   if (value.length < 4) {
-    //     return "The last name should be at least 4 characters long";
-    //   }
-    //   return true;
-    // };
+    const validatelastName = (value) => {
+      // if the field is empty
+      if (!value) {
+        return "This field is required";
+      }
+      // if lastName is less than 4 characters
+      if (value.length < 4) {
+        return "The last name should be at least 4 characters long";
+      }
+      // All is good
+      return true;
+    };
 
-    // const validatemobileNumber = (value) => {
-    //   if (!value) {
-    //     return "This field is required";
-    //   }
-    //   if (value.length < 10) {
-    //     return "The Mobile Number should be at least 10 digits";
-    //   }
-    //   return true;
-    // };
+    const validatemobileNumber = (value) => {
+      if (!value) {
+        return "This field is required";
+      }
+      if (value.length < 10) {
+        return "The Mobile Number should be at least 10 digits";
+      }
+      return true;
+    };
 
-    // const validatephoto = (file) => {
-    //   if (!file) {
-    //     return "Please select a picture";
-    //   }
-    //   if (file.size > 1000000) {
-    //     return "This file must be less than 1MB";
-    //   }
-    //   return true;
-    // };
+    const validateprofilePhoto = (file) => {
+      if (!file) {
+        return "Please select a picture";
+      }
+      if (file.size > 1000000) {
+        return "This file must be less than or equal to 1MB";
+      }
+      return true;
+    };
 
-    // const validatePassword = (value) => {
-    //   // if the field is empty
-    //   if (!value) {
-    //     return "This field is required";
-    //   }
-    //   // if the field is not a valid password
-    //   const regex =
-    //     /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&*()_+!~\-/?\\[\]{}|])(?=.*[^\s]).{8,20}$/;
-    //   if (!regex.test(value)) {
-    //     return "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, 1 special character, and be between 8-20 characters long";
-    //   }
-    //   // All is good
-    //   return true;
-    // };
+    const validatePassword = (value) => {
+      // if the field is empty
+      if (!value) {
+        return "This field is required";
+      }
+      // if the field is not a valid password
+      const regex =
+        /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&*()_+!~\-/?\\[\]{}|])(?=.*[^\s]).{8,20}$/;
+      if (!regex.test(value)) {
+        return "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, 1 special character, and be between 8-20 characters long";
+      }
+      // All is good
+      return true;
+    };
 
-    // const validateConfirmPassword = (value) => {
-    //   if (!value) {
-    //     return "This field is required";
-    //   }
-    //   //validate for password & confirm password match ya not
-    //   if (value !== password.value) {
-    //     return "Passwords do not match";
-    //   }
-    //   return true;
-    // };
+    const validateConfirmPassword = (value) => {
+      if (!value) {
+        return "This field is required";
+      }
+      //validate for password & confirm password match ya not
+      if (value !== password.value) {
+        return "Passwords do not match";
+      }
+      return true;
+    };
 
     return {
       email,
       password,
       firstName,
       lastName,
+      mobileNumber,
+      profilePhoto,
+      confirmPassword,
       handleSubmit,
       error,
-
-      // validateEmail,
-      // validatefirstName,
-      // validatelastName,
-      // validatemobileNumber,
-      // validatephoto,
-      // validatePassword,
-      // validateConfirmPassword,
+      validateEmail,
+      validatefirstName,
+      validatelastName,
+      validatemobileNumber,
+      validateprofilePhoto,
+      validatePassword,
+      validateConfirmPassword,
     };
   },
 };

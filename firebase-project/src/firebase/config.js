@@ -16,4 +16,5 @@ const firebaseConfig = {
   //init firebase auth
   const auth = getAuth()
 
+
   export {auth}
