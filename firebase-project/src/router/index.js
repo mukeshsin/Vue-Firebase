@@ -4,6 +4,10 @@ import homeView from "../views/homeView.vue";
 const routes = [
   {
     path: "/",
+    redirect: "/login",
+  },
+  {
+    path: "/home",
     name: "home-view",
     component: homeView,
   },
@@ -20,6 +24,7 @@ const routes = [
       import(/* webpackChunkName: "loginPage" */ "../views/login.vue"),
   },
 ];
+
 const router = createRouter({
   history: createWebHashHistory(process.env.BASE_URL),
   routes,

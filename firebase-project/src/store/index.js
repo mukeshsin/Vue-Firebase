@@ -1,6 +1,9 @@
 import { createStore } from "vuex";
 import { auth } from "../firebase/config";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getFirestore, doc, setDoc, collection } from "firebase/firestore";
 import { getStorage, ref, uploadBytes } from "firebase/storage";
@@ -69,6 +72,15 @@ export default createStore({
         } else {
           throw new Error("Signup unsuccessful");
         }
+      } catch (error) {
+        console.log(error);
+        throw new Error(error.message);
+      }
+    },
+    async login({ commit }, { email, password }) {
+      try {
+        const res = await signInWithEmailAndPassword(auth, email, password);
+        commit("setUser", res.user);
       } catch (error) {
         console.log(error);
         throw new Error(error.message);

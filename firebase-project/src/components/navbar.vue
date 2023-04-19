@@ -1,6 +1,7 @@
 <template>
   <div class="nav-bar">
     <div class="title">Firebase</div>
+    
     <div class="router-panel">
       <button @click="$router.push('/register')">Register</button>
       <button @click="$router.push('/login')">Login</button>
@@ -67,4 +68,6 @@ export default {
 .router-panel button.active {
   background-color: #00b3b3;
 }
+
+
 </style>

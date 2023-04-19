@@ -6,7 +6,7 @@
         <div class="fixLabel1">
           <label>First name</label>
           <Field
-            v-model="firstName"
+            v-model="user.firstName"
             name="firstName"
             type="firstName"
             class="form-control"
@@ -18,7 +18,7 @@
         <div class="fixLabel2">
           <label>Last name</label>
           <Field
-            v-model="lastName"
+            v-model="user.lastName"
             name="lastName"
             type="lastName"
             class="form-control"
@@ -31,7 +31,7 @@
 
       <label>Mobile Number</label>
       <Field
-        v-model="mobileNumber"
+        v-model="user.mobileNumber"
         name="mobileNumber"
         type="number"
         class="form-control"
@@ -41,7 +41,7 @@
       <ErrorMessage class="validateErr" name="mobileNumber" />
       <label>Profile Photo</label>
       <Field
-        v-model="profilePhoto"
+        v-model="user.profilePhoto"
         name="profilePhoto"
         type="file"
         class="form-control"
@@ -50,7 +50,7 @@
       <ErrorMessage class="validateErr" name="profilePhoto" />
       <label>Email</label>
       <Field
-        v-model="email"
+        v-model="user.email"
         name="email"
         type="email"
         class="form-control"
@@ -60,7 +60,7 @@
       <ErrorMessage class="validateErr" name="email" />
       <label>Password</label>
       <Field
-        v-model="password"
+        v-model="user.password"
         name="password"
         type="password"
         class="form-control"
@@ -71,16 +71,22 @@
 
       <label>Confirm Password</label>
       <Field
-        v-model="confirmPassword"
+        v-model="user.confirmPassword"
         name="confirmPassword"
         type="password"
         class="form-control"
         placeholder="Confirm Password"
-        :rules="validateConfirmPassword"
+        :rules="validateconfirmPassword"
       />
+
       <ErrorMessage class="validateErr" name="confirmPassword" />
       <div>
-        <button type="submit" class="submitBtn">REGISTER NOW</button>
+        <button type="submit" class="submitBtn">
+          <span v-if="isLoading"
+            ><i class="fa fa-spinner fa-spin loaderCss"></i
+          ></span>
+          REGISTER NOW
+        </button>
       </div>
       <div v-if="error">{{ error }}</div>
     </Form>
@@ -89,9 +95,10 @@
 
 <script>
 import { Form, Field, ErrorMessage } from "vee-validate";
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
+import { validationErr } from "../composables/validation.js";
 
 export default {
   name: "register-page",
@@ -101,32 +108,39 @@ export default {
     ErrorMessage,
   },
   setup() {
-    const email = ref("");
-    const password = ref("");
-    const firstName = ref("");
-    const lastName = ref("");
-    const mobileNumber = ref("");
-    const profilePhoto = ref("");
-    const confirmPassword = ref("");
+    const user = reactive({
+      email: "",
+      password: "",
+      mobileNumber: "",
+      firstName: "",
+      lastName: "",
+      profilePhoto: "",
+      confirmPassword: "",
+    });
+
     const error = ref(null);
     const store = useStore();
     const router = useRouter();
+    const isLoading = ref(false);
+
+
 
     const handleSubmit = async () => {
       try {
         // Register the user with Firebase Authentication
-
+        isLoading.value = true;
         await store.dispatch("signup", {
-          email: email.value,
-          password: password.value,
-          firstName: firstName.value,
-          lastName: lastName.value,
-          mobileNumber: mobileNumber.value,
-          profilePhoto: profilePhoto.value,
-          confirmPassword: confirmPassword.value,
+          email: user.email,
+          password: user.password,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          mobileNumber: user.mobileNumber,
+          profilePhoto: user.profilePhoto,
+          confirmPassword: user.confirmPassword,
         });
 
         // Redirect the user to the login page
+        isLoading.value = false;
         router.push("/login");
       } catch (err) {
         console.log(err);
@@ -134,109 +148,12 @@ export default {
       }
     };
 
-    const validateEmail = (value) => {
-      // if the field is empty
-      if (!value) {
-        return "This field is required";
-      }
-      // if the field is not a valid email
-      const regex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i;
-      if (!regex.test(value)) {
-        return "This field must be a valid email";
-      }
-      // All is good
-      return true;
-    };
-
-    const validatefirstName = (value) => {
-      // if the field is empty
-      if (!value) {
-        return "This field is required";
-      }
-      // if firstName is less than 4 characters
-      if (value.length < 4) {
-        return "The first name should be at least 4 characters long";
-      }
-      // All is good
-      return true;
-    };
-
-    const validatelastName = (value) => {
-      // if the field is empty
-      if (!value) {
-        return "This field is required";
-      }
-      // if lastName is less than 4 characters
-      if (value.length < 4) {
-        return "The last name should be at least 4 characters long";
-      }
-      // All is good
-      return true;
-    };
-
-    const validatemobileNumber = (value) => {
-      if (!value) {
-        return "This field is required";
-      }
-      if (value.length < 10) {
-        return "The Mobile Number should be at least 10 digits";
-      }
-      return true;
-    };
-
-    const validateprofilePhoto = (file) => {
-      if (!file) {
-        return "Please select a picture";
-      }
-      if (file.size > 1000000) {
-        return "This file must be less than or equal to 1MB";
-      }
-      return true;
-    };
-
-    const validatePassword = (value) => {
-      // if the field is empty
-      if (!value) {
-        return "This field is required";
-      }
-      // if the field is not a valid password
-      const regex =
-        /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&*()_+!~\-/?\\[\]{}|])(?=.*[^\s]).{8,20}$/;
-      if (!regex.test(value)) {
-        return "Password must contain at least 1 uppercase letter, 1 lowercase letter, 1 digit, 1 special character, and be between 8-20 characters long";
-      }
-      // All is good
-      return true;
-    };
-
-    const validateConfirmPassword = (value) => {
-      if (!value) {
-        return "This field is required";
-      }
-      //validate for password & confirm password match ya not
-      if (value !== password.value) {
-        return "Passwords do not match";
-      }
-      return true;
-    };
-
     return {
-      email,
-      password,
-      firstName,
-      lastName,
-      mobileNumber,
-      profilePhoto,
-      confirmPassword,
+      user,
       handleSubmit,
       error,
-      validateEmail,
-      validatefirstName,
-      validatelastName,
-      validatemobileNumber,
-      validateprofilePhoto,
-      validatePassword,
-      validateConfirmPassword,
+      
+      ...validationErr(),
     };
   },
 };
@@ -248,5 +165,9 @@ export default {
   font-size: 17px;
   display: flex;
   padding: 8px;
+}
+
+.loaderCss {
+  font-size: 15px;
 }
 </style>
