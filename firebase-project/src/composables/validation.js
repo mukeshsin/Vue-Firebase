@@ -74,21 +74,6 @@ export const validationErr = () => {
     return true;
   };
 
-  const validateconfirmPassword = (confirmPassword, password) => {
-    //if the field is empty
-    if (!confirmPassword) {
-      return "This field is required";
-    }
-    // If passwords do not match
-    if (confirmPassword !== password) {
-      return "Passwords do not match";
-    }
-
-    console.log(password);
-    console.log(confirmPassword);
-
-    return true;
-  };
 
   return {
     validationErr,
@@ -98,6 +83,6 @@ export const validationErr = () => {
     validatemobileNumber,
     validateprofilePhoto,
     validatePassword,
-    validateconfirmPassword,
+  
   };
 };

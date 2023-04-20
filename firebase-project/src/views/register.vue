@@ -123,7 +123,21 @@ export default {
     const router = useRouter();
     const isLoading = ref(false);
 
+    const validateconfirmPassword = (confirmPassword, password) => {
+      //if the field is empty
+      if (!confirmPassword) {
+        return "This field is required";
+      }
+      // If passwords do not match
+      if (confirmPassword !== user.password) {
+        return "Passwords do not match";
+      }
 
+      console.log(password);
+      console.log(confirmPassword);
+
+      return true;
+    };
 
     const handleSubmit = async () => {
       try {
@@ -152,7 +166,7 @@ export default {
       user,
       handleSubmit,
       error,
-      
+      validateconfirmPassword,
       ...validationErr(),
     };
   },
