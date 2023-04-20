@@ -25,17 +25,9 @@
       </div>
       <div v-if="error">{{ error }}</div>
 
-      <div class="social-link">
-        <button class="fb-link">
-          <i class="fa-brands fa-facebook fbicon"></i>Sigin with Facebook
-        </button>
-        <button class="tw-link">
-          <i class="fa-brands fa-twitter twittericon"></i>Sigin with Twitter
-        </button>
-        <button class="Gg-link">
-          <i class="fa-brands fa-google googleicon"></i>Sigin with Google
-        </button>
-      </div>
+      <!-- Add social login buttons -->
+      <div id="firebaseui-auth-container"></div>
+      <div id="loader">Loading...</div>
     </form>
   </div>
 </template>
@@ -44,8 +36,11 @@
 import { ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-// import firebase from "firebase";
-// import firebaseui from "firebaseui"; // import firebaseui instead of FirebaseAuthUI
+import firebase from "firebase/app";
+import "firebase/auth";
+
+// Import Firebase UI
+import * as firebaseui from "firebaseui";
 
 export default {
   name: "login-page",
@@ -70,6 +65,29 @@ export default {
         error.value = err.message;
       }
     };
+
+    // Initialize Firebase UI
+    const uiConfig = {
+      signInFlow: "popup",
+      signInSuccessUrl: "http://localhost:8080",
+      signInOptions: [
+        // List of OAuth providers supported.
+        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
+        firebase.auth.FacebookAuthProvider.PROVIDER_ID,
+        firebase.auth.TwitterAuthProvider.PROVIDER_ID,
+      ],
+      callbacks: {
+        signInSuccessWithAuthResult: function (authResult) {
+          console.log(authResult);
+          return true;
+        },
+        uiShown: function () {
+          document.getElementById("loader").style.display = "none";
+        },
+      },
+    };
+    var ui = new firebaseui.auth.AuthUI(firebase.auth());
+    ui.start("#firebaseui-auth-container", uiConfig);
 
     return {
       email,
