@@ -23,6 +23,13 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "loginPage" */ "../views/login.vue"),
   },
+
+  {
+    path: "/post",
+    name: "post-page",
+    component: () =>
+      import(/* webpackChunkName: "postPage" */ "../views/addPost.vue"),
+  },
 ];
 
 const router = createRouter({

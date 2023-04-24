@@ -98,7 +98,7 @@ import { Form, Field, ErrorMessage } from "vee-validate";
 import { reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import { validationErr } from "../composables/validation.js";
+import { validationErr } from "../composables/validation.js"
 
 export default {
   name: "register-page",
@@ -108,7 +108,7 @@ export default {
     ErrorMessage,
   },
   setup() {
-    const user = reactive({
+     const user = reactive({
       email: "",
       password: "",
       mobileNumber: "",

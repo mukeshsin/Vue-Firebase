@@ -3,7 +3,9 @@
     <h1 class="heading">Firebase</h1>
     <div class="router-panel">
       <button @click="$router.push('/register')">Register</button>
-      <button @click="$router.push('/login')">Login</button>
+      <button @click="$router.push('/login')" :disabled="isUserLoggedIn">
+        Login
+      </button>
     </div>
   </div>
 </template>

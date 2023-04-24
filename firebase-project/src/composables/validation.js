@@ -74,7 +74,6 @@ export const validationErr = () => {
     return true;
   };
 
-
   return {
     validationErr,
     validatefirstName,
@@ -83,6 +82,5 @@ export const validationErr = () => {
     validatemobileNumber,
     validateprofilePhoto,
     validatePassword,
-  
   };
 };

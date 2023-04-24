@@ -4,7 +4,7 @@
     <form @submit.prevent="handleLogin">
       <label>Email</label>
       <input
-        v-model="email"
+        v-model="user.email"
         name="email"
         type="email"
         class="form-control"
@@ -13,7 +13,7 @@
 
       <label>Password</label>
       <input
-        v-model="password"
+        v-model="user.password"
         name="password"
         type="password"
         class="form-control"
@@ -23,30 +23,34 @@
       <div>
         <button type="submit" class="submitBtn">LOGIN</button>
       </div>
-      <div v-if="error">{{ error }}</div>
-
-      <!-- Add social login buttons -->
-      <div id="firebaseui-auth-container"></div>
-      <div id="loader">Loading...</div>
+      <div v-if="error" class="error">{{ error }}</div>
+      <div class="social-link">
+        <button class="fb-link" @click="handleFbLogin">
+          <i class="fa-brands fa-facebook fbicon"></i>Signin with Facebook
+        </button>
+        <button class="tw-link" @click="handleTwLogin">
+          <i class="fa-brands fa-twitter twittericon"></i>Signin with Twitter
+        </button>
+        <button class="Gg-link" @click="handleGgLogin">
+          <i class="fa-brands fa-google googleicon"></i>Signin with Google
+        </button>
+      </div>
     </form>
   </div>
 </template>
 
 <script>
-import { ref } from "vue";
+import { ref, reactive } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import firebase from "firebase/app";
-import "firebase/auth";
-
-// Import Firebase UI
-import * as firebaseui from "firebaseui";
 
 export default {
   name: "login-page",
   setup() {
-    const email = ref("");
-    const password = ref("");
+    const user = reactive({
+      email: "",
+      password: "",
+    });
     const error = ref(null);
     const store = useStore();
     const router = useRouter();
@@ -54,9 +58,10 @@ export default {
     const handleLogin = async () => {
       try {
         // login the user with Firebase Authentication
+
         await store.dispatch("login", {
-          email: email.value,
-          password: password.value,
+          email: user.email,
+          password: user.password,
         });
 
         router.push("/");
@@ -66,34 +71,43 @@ export default {
       }
     };
 
-    // Initialize Firebase UI
-    const uiConfig = {
-      signInFlow: "popup",
-      signInSuccessUrl: "http://localhost:8080",
-      signInOptions: [
-        // List of OAuth providers supported.
-        firebase.auth.GoogleAuthProvider.PROVIDER_ID,
-        firebase.auth.FacebookAuthProvider.PROVIDER_ID,
-        firebase.auth.TwitterAuthProvider.PROVIDER_ID,
-      ],
-      callbacks: {
-        signInSuccessWithAuthResult: function (authResult) {
-          console.log(authResult);
-          return true;
-        },
-        uiShown: function () {
-          document.getElementById("loader").style.display = "none";
-        },
-      },
+    const handleGgLogin = async () => {
+      try {
+        await store.dispatch("signInWithGoogle");
+        // Google Sign-In successful, perform additional actions if needed
+      } catch (error) {
+        console.log(error);
+        // Handle error
+      }
     };
-    var ui = new firebaseui.auth.AuthUI(firebase.auth());
-    ui.start("#firebaseui-auth-container", uiConfig);
+
+    const handleFbLogin = async () => {
+      try {
+        await store.dispatch("signInWithFacebook");
+        // Facebook Sign-In successful, perform additional actions if needed
+      } catch (error) {
+        console.log(error);
+        // Handle error
+      }
+    };
+
+    const handleTwLogin = async () => {
+      try {
+        await store.dispatch("signInWithTwitter");
+        // Twitter Sign-In successful, perform additional actions if needed
+      } catch (error) {
+        console.log(error);
+        // Handle error
+      }
+    };
 
     return {
-      email,
-      password,
+      user,
       error,
       handleLogin,
+      handleGgLogin,
+      handleFbLogin,
+      handleTwLogin,
     };
   },
 };
@@ -104,6 +118,7 @@ export default {
   display: flex;
   margin-left: 22px;
 }
+
 .fb-link {
   border: none;
   margin-bottom: 7px;
@@ -111,7 +126,7 @@ export default {
   color: white;
   background-color: #507cc0;
   padding: 8px;
-  font-size: 14px;
+  font-size: 11px;
 }
 
 .tw-link {
@@ -121,7 +136,7 @@ export default {
   color: white;
   background-color: #64ccf1;
   margin-right: 8px;
-  font-size: 14px;
+  font-size: 11px;
 }
 
 .Gg-link {
@@ -131,7 +146,7 @@ export default {
   color: white;
   background-color: #df4930;
   margin-right: 8px;
-  font-size: 13px;
+  font-size: 11px;
 }
 
 .fbicon {
@@ -143,8 +158,16 @@ export default {
   margin-right: 3px;
   font-size: 20px;
 }
+
 .googleicon {
   margin-right: 3px;
   font-size: 20px;
+}
+
+.error {
+  color: red;
+  font-size: 17px;
+  display: flex;
+  padding: 8px;
 }
 </style>
