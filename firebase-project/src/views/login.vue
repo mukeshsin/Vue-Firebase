@@ -1,51 +1,79 @@
 <template>
-  <div class="form-container">
-    <h1 class="form-head">LOGIN FORM</h1>
-    <form @submit.prevent="handleLogin">
-      <label>Email</label>
-      <input
+  <div
+    class="w-4/5 h-full sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9  shadow-white pb-15 box-border">
+    <h1 class="text-headColor tracking-widest text-sm sm:text-lg md:text-2xl">
+      LOGIN FORM
+    </h1>
+    <Form class="w-3/4 mx-auto" @submit="handleLogin">
+      <label class="flex text-white mt-3 mb-1 text-lg">Email</label>
+      <Field
+        class="w-full  border-solid  outline-none text-base tracking-wider p-1"
         v-model="user.email"
         name="email"
         type="email"
-        class="form-control"
         placeholder="Email"
+        :rules="validateEmail"
       />
-
-      <label>Password</label>
-      <input
+      <ErrorMessage class="flex text-red-500 mt-0.5" name="email" />
+      <label class="flex text-white mt-1 mb-1 text-lg">Password</label>
+      <Field
+        class="w-full  border-solid  outline-none text-base tracking-wider p-1"
         v-model="user.password"
         name="password"
         type="password"
-        class="form-control"
         placeholder="Password"
+        :rules="validatePassword"
       />
+      <ErrorMessage class="flex text-red-500 mt-0.5" name="password" />
 
       <div>
-        <button type="submit" class="submitBtn">LOGIN</button>
-      </div>
-      <div v-if="error" class="error">{{ error }}</div>
-      <div class="social-link">
-        <button class="fb-link" @click="handleFbLogin">
-          <i class="fa-brands fa-facebook fbicon"></i>Signin with Facebook
-        </button>
-        <button class="tw-link" @click="handleTwLogin">
-          <i class="fa-brands fa-twitter twittericon"></i>Signin with Twitter
-        </button>
-        <button class="Gg-link" @click="handleGgLogin">
-          <i class="fa-brands fa-google googleicon"></i>Signin with Google
+        <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>
+        <button
+          class="w-full h-45 bg-buttonBg mt-3 mb-4 border-0 tracking-wider"
+        >
+          LOGIN
         </button>
       </div>
-    </form>
+
+      <div class="mx-auto md:ml-2 lg:flex">
+        <button
+          class="border-0 mb-2 mr-1 text-white bg-blue-600 p-2 text-xs md:p-1 lg:w-full"
+          @click="handleFbLogin"
+        >
+          <i class="fa-brands fa-facebook mr-1 text-base"></i>Signin with
+          Facebook
+        </button>
+        <button
+          class="border-0 mb-2 mr-1 text-white bg-blue-400 p-2 text-xs md:p-1 lg:w-full"
+          @click="handleTwLogin"
+        >
+          <i class="fa-brands fa-twitter mr-1 text-base"></i>Signin with Twitter
+        </button>
+        <button
+          class="border-0 mb-2 mr-1 text-white bg-red-700 p-2 text-xs md:p-1 lg:w-full"
+          @click="handleGgLogin"
+        >
+          <i class="fa-brands fa-google mr-1 text-base"></i>Signin with Google
+        </button>
+      </div>
+    </Form>
   </div>
 </template>
 
 <script>
+import { Form, Field, ErrorMessage } from "vee-validate";
 import { ref, reactive } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
+import { validationErr } from "../composables/validation.js";
 
 export default {
   name: "login-page",
+  components: {
+    Form,
+    Field,
+    ErrorMessage,
+  },
   setup() {
     const user = reactive({
       email: "",
@@ -108,66 +136,10 @@ export default {
       handleGgLogin,
       handleFbLogin,
       handleTwLogin,
+      ...validationErr(),
     };
   },
 };
 </script>
 
-<style scoped>
-.social-link {
-  display: flex;
-  margin-left: 22px;
-}
-
-.fb-link {
-  border: none;
-  margin-bottom: 7px;
-  margin-right: 8px;
-  color: white;
-  background-color: #507cc0;
-  padding: 8px;
-  font-size: 11px;
-}
-
-.tw-link {
-  border: none;
-  margin-bottom: 7px;
-  padding: 8px;
-  color: white;
-  background-color: #64ccf1;
-  margin-right: 8px;
-  font-size: 11px;
-}
-
-.Gg-link {
-  border: none;
-  margin-bottom: 7px;
-  padding: 8px;
-  color: white;
-  background-color: #df4930;
-  margin-right: 8px;
-  font-size: 11px;
-}
-
-.fbicon {
-  margin-right: 3px;
-  font-size: 20px;
-}
-
-.twittericon {
-  margin-right: 3px;
-  font-size: 20px;
-}
-
-.googleicon {
-  margin-right: 3px;
-  font-size: 20px;
-}
-
-.error {
-  color: red;
-  font-size: 17px;
-  display: flex;
-  padding: 8px;
-}
-</style>
+<style scoped></style>

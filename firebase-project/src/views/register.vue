@@ -1,94 +1,101 @@
 <template>
-  <div class="form-container">
-    <h1 class="form-head">REGISTRATION FORM</h1>
-    <Form @submit="handleSubmit">
-      <div class="fixCss">
-        <div class="fixLabel1">
-          <label>First name</label>
+  <div
+    class="w-4/5 h-full sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
+  >
+    <h1 class="text-headColor tracking-widest text-xs sm:text-lg md:text-2xl">
+      REGISTRATION FORM
+    </h1>
+    <Form class="w-3/4 mx-auto" @submit="handleSubmit">
+      <div class="flex">
+        <div class="w-1/2 pr-2">
+          <label class="flex text-white mt-4 mb-1 text-lg">First name</label>
           <Field
+            class="w-full border-solid outline-none text-base tracking-wider p-1"
             v-model="user.firstName"
             name="firstName"
             type="firstName"
-            class="form-control"
             placeholder="First name"
-            :rules="validatefirstName"
+            :rules="validateFirstName"
           />
-          <ErrorMessage class="validateErr" name="firstName" />
+          <ErrorMessage class="flex text-red-500 mt-0.5" name="firstName" />
         </div>
-        <div class="fixLabel2">
-          <label>Last name</label>
+        <div class="w-1/2 pl-2">
+          <label class="flex text-white mt-4 mb-1 text-lg">Last name</label>
           <Field
+            class="w-full border-solid outline-none text-base tracking-wider p-1"
             v-model="user.lastName"
             name="lastName"
             type="lastName"
-            class="form-control"
             placeholder="Last name"
-            :rules="validatelastName"
+            :rules="validateLastName"
           />
-          <ErrorMessage class="validateErr" name="lastName" />
+          <ErrorMessage class="flex text-red-500 mt-0.5" name="lastName" />
         </div>
       </div>
 
-      <label>Mobile Number</label>
+      <label class="flex text-white mt-3 mb-1 text-lg">Mobile Number</label>
       <Field
+        class="w-full border-solid outline-none text-base tracking-wider p-1"
         v-model="user.mobileNumber"
         name="mobileNumber"
         type="number"
-        class="form-control"
         placeholder="Mobile Number"
-        :rules="validatemobileNumber"
+        :rules="validateMobileNumber"
       />
-      <ErrorMessage class="validateErr" name="mobileNumber" />
-      <label>Profile Photo</label>
+      <ErrorMessage class="flex text-red-500 mt-0.5" name="mobileNumber" />
+      <label class="flex text-white mt-3 mb-1 text-lg">Profile Photo</label>
       <Field
+        class="w-full border-solid outline-none text-base tracking-wider bg-white p-1"
         v-model="user.profilePhoto"
         name="profilePhoto"
         type="file"
-        class="form-control"
-        :rules="validateprofilePhoto"
+        placeholder="Profile photo"
+        :rules="validateProfilePhoto"
       />
-      <ErrorMessage class="validateErr" name="profilePhoto" />
-      <label>Email</label>
+      <ErrorMessage class="flex text-red-500 mt-0.5" name="profilePhoto" />
+      <label class="flex text-white mt-3 mb-1 text-lg">Email</label>
       <Field
+        class="w-full border-solid outline-none text-base tracking-wider p-1"
         v-model="user.email"
         name="email"
         type="email"
-        class="form-control"
         placeholder="Email"
         :rules="validateEmail"
       />
-      <ErrorMessage class="validateErr" name="email" />
-      <label>Password</label>
+      <ErrorMessage class="flex text-red-500 mt-0.5" name="email" />
+      <label class="flex text-white mt-3 mb-1 text-lg">Password</label>
       <Field
+        class="w-full border-solid outline-none text-base tracking-wider p-1"
         v-model="user.password"
         name="password"
         type="password"
-        class="form-control"
         placeholder="Password"
         :rules="validatePassword"
       />
-      <ErrorMessage class="validateErr" name="password" />
+      <ErrorMessage class="flex text-red-500 mt-0.5" name="password" />
 
-      <label>Confirm Password</label>
+      <label class="flex text-white mt-3 mb-1 text-lg">Confirm Password</label>
       <Field
+        class="w-full border-solid outline-none text-base tracking-wider p-1"
         v-model="user.confirmPassword"
         name="confirmPassword"
         type="password"
-        class="form-control"
         placeholder="Confirm Password"
-        :rules="validateconfirmPassword"
+        :rules="validateConfirmPassword"
       />
 
-      <ErrorMessage class="validateErr" name="confirmPassword" />
+      <ErrorMessage class="flex text-red-500 mt-0.5" name="confirmPassword" />
+      <span v-if="isLoading">
+        <i class="fa fa-spinner fa-spin text-lg text-white mt-1"></i>
+      </span>
       <div>
-        <button type="submit" class="submitBtn">
-          <span v-if="isLoading"
-            ><i class="fa fa-spinner fa-spin loaderCss"></i
-          ></span>
+        <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>
+        <button
+          class="w-full h-45 bg-buttonBg mt-3 mb-6 border-0 tracking-wider"
+        >
           REGISTER NOW
         </button>
       </div>
-      <div v-if="error">{{ error }}</div>
     </Form>
   </div>
 </template>
@@ -98,7 +105,7 @@ import { Form, Field, ErrorMessage } from "vee-validate";
 import { reactive, ref } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
-import { validationErr } from "../composables/validation.js"
+import { validationErr } from "../composables/validation.js";
 
 export default {
   name: "register-page",
@@ -108,7 +115,7 @@ export default {
     ErrorMessage,
   },
   setup() {
-     const user = reactive({
+    const user = reactive({
       email: "",
       password: "",
       mobileNumber: "",
@@ -123,7 +130,7 @@ export default {
     const router = useRouter();
     const isLoading = ref(false);
 
-    const validateconfirmPassword = (confirmPassword, password) => {
+    const validateConfirmPassword = (confirmPassword, password) => {
       //if the field is empty
       if (!confirmPassword) {
         return "This field is required";
@@ -159,6 +166,7 @@ export default {
       } catch (err) {
         console.log(err);
         error.value = err.message;
+        isLoading.value = false;
       }
     };
 
@@ -166,22 +174,12 @@ export default {
       user,
       handleSubmit,
       error,
-      validateconfirmPassword,
+      isLoading,
+      validateConfirmPassword,
       ...validationErr(),
     };
   },
 };
 </script>
 
-<style scoped>
-.validateErr {
-  color: red;
-  font-size: 17px;
-  display: flex;
-  padding: 8px;
-}
-
-.loaderCss {
-  font-size: 15px;
-}
-</style>
+<style scoped></style>

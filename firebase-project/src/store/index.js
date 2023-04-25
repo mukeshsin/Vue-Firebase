@@ -8,17 +8,10 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   FacebookAuthProvider,
-  TwitterAuthProvider
+  TwitterAuthProvider,
 } from "firebase/auth";
 import { getAuth, updateProfile } from "firebase/auth";
-import {
-  getFirestore,
-  doc,
-  setDoc,
-  collection,
-  Timestamp,
-  updateDoc,
-} from "firebase/firestore";
+import { getFirestore, doc, setDoc, collection } from "firebase/firestore";
 import { getStorage, ref, uploadBytes } from "firebase/storage";
 
 export default createStore({
@@ -161,47 +154,6 @@ export default createStore({
         throw new Error(error.message);
       }
     },
-
-    // create add post page which will add collection in firebase
-    async addPost({ commit }, { title, photo, slug, description }) {
-      try {
-        // Get the current user
-        const currentUser = auth.currentUser;
-        if (!currentUser) {
-          throw new Error("User not authenticated");
-        }
-
-        // Create a new post object
-        const post = {
-          title,
-          photo,
-          slug,
-          description,
-          createdAt: Timestamp.fromDate(new Date()),
-          updatedAt: Timestamp.fromDate(new Date()),
-          updatedBy: currentUser.uid,
-        };
-
-        // Add the post to the "posts" collection in Firebase
-        const db = getFirestore();
-        const postsRef = collection(db, "posts");
-        const docRef = doc(postsRef);
-        await setDoc(docRef, post);
-
-        // Update the user's last updated timestamp
-        const userRef = doc(collection(db, "users"), currentUser.uid);
-        await updateDoc(userRef, {
-          updatedAt: Timestamp.fromDate(new Date()),
-        });
-
-        // Commit the changes to the Vuex store
-        commit("setPost", post);
-      } catch (error) {
-        console.log(error);
-        throw new Error(error.message);
-      }
-    },
   },
-
   modules: {},
 });

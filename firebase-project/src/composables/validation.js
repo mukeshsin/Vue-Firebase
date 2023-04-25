@@ -1,5 +1,5 @@
 export const validationErr = () => {
-  const validatefirstName = (value) => {
+  const validateFirstName = (value) => {
     // if the field is empty
     if (!value) {
       return "This field is required";
@@ -12,7 +12,7 @@ export const validationErr = () => {
     return true;
   };
 
-  const validatelastName = (value) => {
+  const validateLastName = (value) => {
     // if the field is empty
     if (!value) {
       return "This field is required";
@@ -25,17 +25,22 @@ export const validationErr = () => {
     return true;
   };
 
-  const validatemobileNumber = (value) => {
+  const validateMobileNumber = (value) => {
     if (!value) {
       return "This field is required";
     }
     if (value.length < 10) {
       return "The Mobile Number should be at least 10 digits";
     }
+    // If the mobile number is not valid
+    const regex = /^[0-9]{10}$/; // Only allow 10 digits
+    if (!regex.test(value)) {
+      return "This field must be a valid mobile number";
+    }
     return true;
   };
 
-  const validateprofilePhoto = (file) => {
+  const validateProfilePhoto = (file) => {
     if (!file) {
       return "Please select a picture";
     }
@@ -76,11 +81,11 @@ export const validationErr = () => {
 
   return {
     validationErr,
-    validatefirstName,
-    validatelastName,
+    validateFirstName,
+    validateLastName,
     validateEmail,
-    validatemobileNumber,
-    validateprofilePhoto,
+    validateMobileNumber,
+    validateProfilePhoto,
     validatePassword,
   };
 };
