@@ -1,8 +1,8 @@
 <template>
   <div
-    class="w-4/5 h-full sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
+    class="w-4/5 h-full sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border mb-3"
   >
-    <h1 class="text-headColor tracking-widest text-xs sm:text-lg md:text-2xl">
+    <h1 class="text-headColor tracking-widest text-sm sm:text-lg md:text-2xl">
       REGISTRATION FORM
     </h1>
     <Form class="w-3/4 mx-auto" @submit="handleSubmit">
@@ -10,7 +10,7 @@
         <div class="w-1/2 pr-2">
           <label class="flex text-white mt-4 mb-1 text-lg">First name</label>
           <Field
-            class="w-full border-solid outline-none text-base tracking-wider p-1"
+            class="w-full border-solid outline-none text-base tracking-wider p-2 text-sm md:text-base lg:text-lg"
             v-model="user.firstName"
             name="firstName"
             type="firstName"
@@ -22,7 +22,7 @@
         <div class="w-1/2 pl-2">
           <label class="flex text-white mt-4 mb-1 text-lg">Last name</label>
           <Field
-            class="w-full border-solid outline-none text-base tracking-wider p-1"
+            class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
             v-model="user.lastName"
             name="lastName"
             type="lastName"
@@ -35,7 +35,7 @@
 
       <label class="flex text-white mt-3 mb-1 text-lg">Mobile Number</label>
       <Field
-        class="w-full border-solid outline-none text-base tracking-wider p-1"
+        class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
         v-model="user.mobileNumber"
         name="mobileNumber"
         type="number"
@@ -45,7 +45,7 @@
       <ErrorMessage class="flex text-red-500 mt-0.5" name="mobileNumber" />
       <label class="flex text-white mt-3 mb-1 text-lg">Profile Photo</label>
       <Field
-        class="w-full border-solid outline-none text-base tracking-wider bg-white p-1"
+        class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
         v-model="user.profilePhoto"
         name="profilePhoto"
         type="file"
@@ -55,7 +55,7 @@
       <ErrorMessage class="flex text-red-500 mt-0.5" name="profilePhoto" />
       <label class="flex text-white mt-3 mb-1 text-lg">Email</label>
       <Field
-        class="w-full border-solid outline-none text-base tracking-wider p-1"
+        class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
         v-model="user.email"
         name="email"
         type="email"
@@ -65,7 +65,7 @@
       <ErrorMessage class="flex text-red-500 mt-0.5" name="email" />
       <label class="flex text-white mt-3 mb-1 text-lg">Password</label>
       <Field
-        class="w-full border-solid outline-none text-base tracking-wider p-1"
+        class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
         v-model="user.password"
         name="password"
         type="password"
@@ -76,7 +76,7 @@
 
       <label class="flex text-white mt-3 mb-1 text-lg">Confirm Password</label>
       <Field
-        class="w-full border-solid outline-none text-base tracking-wider p-1"
+        class="w-full border-solid outline-none text-base tracking-wider p-2 text-sm md:text-base lg:text-lg"
         v-model="user.confirmPassword"
         name="confirmPassword"
         type="password"
@@ -91,21 +91,27 @@
       <div>
         <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>
         <button
-          class="w-full h-45 bg-buttonBg mt-3 mb-6 border-0 tracking-wider"
+          class="w-full h-45 bg-buttonBg mt-3 mb-6 border-0 tracking-wider p-2 md:text-base lg:text-lg"
         >
           REGISTER NOW
         </button>
       </div>
     </Form>
   </div>
+  <div class="ajdustToast">
+    <successToast v-if="isSubmitted">
+      <template v-slot:content>You have successfully registered</template>
+    </successToast>
+  </div>
 </template>
 
 <script>
 import { Form, Field, ErrorMessage } from "vee-validate";
-import { reactive, ref } from "vue";
+import { reactive, ref, computed } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { validationErr } from "../composables/validation.js";
+import successToast from "../components/successToast.vue";
 
 export default {
   name: "register-page",
@@ -113,6 +119,7 @@ export default {
     Form,
     Field,
     ErrorMessage,
+    successToast,
   },
   setup() {
     const user = reactive({
@@ -129,6 +136,16 @@ export default {
     const store = useStore();
     const router = useRouter();
     const isLoading = ref(false);
+    const isSubmitted = ref(false);
+
+    //errors
+    const signUpErr = ref("");
+    const signupError = computed(() => {
+      return store.state.signupError;
+    });
+    const signErr = computed(() => {
+      return store.state.signErr;
+    });
 
     const validateConfirmPassword = (confirmPassword, password) => {
       //if the field is empty
@@ -149,6 +166,7 @@ export default {
     const handleSubmit = async () => {
       try {
         // Register the user with Firebase Authentication
+        signupError.value = "";
         isLoading.value = true;
         await store.dispatch("signup", {
           email: user.email,
@@ -159,14 +177,19 @@ export default {
           profilePhoto: user.profilePhoto,
           confirmPassword: user.confirmPassword,
         });
-
-        // Redirect the user to the login page
-        isLoading.value = false;
-        router.push("/login");
+        if (!signupError.value && !signErr.value) {
+          isSubmitted.value = true;
+          setTimeout(() => {
+            router.replace({ path: "/login" });
+            isLoading.value = false;
+          }, "3000");
+        } else {
+          isLoading.value = false;
+          signUpErr.value = "Email already exists.Try something else";
+        }
       } catch (err) {
         console.log(err);
         error.value = err.message;
-        isLoading.value = false;
       }
     };
 
@@ -177,6 +200,10 @@ export default {
       isLoading,
       validateConfirmPassword,
       ...validationErr(),
+
+      signUpErr,
+      signErr,
+      isSubmitted,
     };
   },
 };

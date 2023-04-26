@@ -10,13 +10,14 @@
     <div class="router-panel text-white mr-4 flex">
       <button
         @click="$router.push('/register')"
-        class="text-navBtn1 bg-navBtn2 border-none mr-2 cursor-pointer text-xs md:text-base lg:text-lg rounded-md p-1 font-bold tracking-widest"
+        class="text-navBtn1 bg-navBtn2 border-none mr-2 cursor-pointer text-xs md:text-base lg:text-lg rounded-md p-1 font-bold tracking-widest hover:bg-navBtnHover"
       >
         Register
       </button>
       <button
         @click="$router.push('/login')"
-        class="text-navBtn1 bg-navBtn2 border-none mr-2 cursor-pointer text-xs md:text-base lg:text-lg rounded-md p-1 font-bold tracking-widest"
+        v-if="!isLoginPage()"
+        class="text-navBtn1 bg-navBtn2 border-none mr-2 cursor-pointer text-xs md:text-base lg:text-lg rounded-md p-1 font-bold tracking-widest hover:bg-navBtnHover"
       >
         Login
       </button>
@@ -25,8 +26,19 @@
 </template>
 
 <script>
+import { useRouter } from "vue-router";
+
 export default {
   name: "NavBar",
+  setup() {
+    const router = useRouter();
+
+    const isLoginPage = () => {
+      return router.currentRoute.value.path === "/login";
+    };
+
+    return { isLoginPage };
+  },
 };
 </script>
 

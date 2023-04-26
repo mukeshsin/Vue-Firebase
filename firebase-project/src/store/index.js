@@ -18,6 +18,8 @@ export default createStore({
   state: {
     user: null,
     post: null,
+    signupError: null,
+    signErr: null,
   },
   getters: {},
   mutations: {
