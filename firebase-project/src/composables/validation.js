@@ -93,6 +93,55 @@ export const validationErr = () => {
     return true;
   };
 
+  // validate for post page
+
+  const validateTitle =(value)=>{
+     // if the field is empty
+     if (!value) {
+      return "This field is required";
+    }
+    // if firstName is less than 4 characters
+    if (value.length < 4) {
+      return "The first name should be at least 4 characters long";
+    }
+    // All is good
+    return true;
+
+  }
+
+  const validatePhoto = (file) => {
+    if (!file) {
+      return "This field is required";
+    }
+    if (file.size > 1000000) {
+      return "This file must be less than or equal to 1MB";
+    }
+    return true;
+  };
+
+  const validateSlug = (value) => {
+    if (!value) {
+      return "This field is required";
+    }
+    if (value.length > 2) {
+      return "The Slug should be at least 2 characters long";
+    }
+    return true;
+  };
+
+  const validateDescription = (value) => {
+    if (!value) {
+      return "This field is required";
+    }
+    const wordCount = value.split(" ").length;
+    if (wordCount < 5) {
+      return "The description should be at least 2 words long";
+    }
+    return true;
+  };
+  
+
+
   return {
     validationErr,
     validateFirstName,
@@ -101,6 +150,10 @@ export const validationErr = () => {
     validateMobileNumber,
     validateProfilePhoto,
     validatePassword,
-    validatePasswordLogin
+    validatePasswordLogin,
+    validateTitle,
+    validatePhoto,
+    validateSlug,
+    validateDescription
   };
 };

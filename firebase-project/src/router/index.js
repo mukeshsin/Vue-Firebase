@@ -18,6 +18,14 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "loginPage" */ "../views/login.vue"),
   },
+  
+  {
+    path: "/post",
+    name: "post-page",
+    component: () =>
+      import(/* webpackChunkName: "postPage" */ "../views/post.vue"),
+  },
+
 ];
 
 const router = createRouter({

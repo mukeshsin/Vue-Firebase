@@ -112,6 +112,9 @@ import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { validationErr } from "../composables/validation.js";
 import successToast from "../components/successToast.vue";
+import { getAuth, updateProfile } from "firebase/auth";
+import { getFirestore, doc, setDoc, collection } from "firebase/firestore";
+import { getStorage, uploadBytes } from "firebase/storage";
 
 export default {
   name: "register-page",
@@ -168,7 +171,7 @@ export default {
         // Register the user with Firebase Authentication
         signupError.value = "";
         isLoading.value = true;
-        await store.dispatch("signup", {
+        const res = await store.dispatch("signup", {
           email: user.email,
           password: user.password,
           firstName: user.firstName,
@@ -177,15 +180,48 @@ export default {
           profilePhoto: user.profilePhoto,
           confirmPassword: user.confirmPassword,
         });
+
+        if (res && res.user) {
+          // check if res and res.user exists
+          const auth = getAuth();
+          // Upload the photo to Firebase Storage
+          const storage = getStorage();
+          const storageRef = ref(
+            storage,
+            `users/${res.user.uid}/${user.profilePhoto.name}`
+          );
+          console.log(user);
+          await uploadBytes(storageRef, user.profilePhoto);
+
+          // Update the user's detail with update user
+          await updateProfile(auth.currentUser, {
+            displayName: `${user.firstName} ${user.lastName}`,
+            phoneNumber: `${user.mobileNumber}`,
+            photoURL: `${user.profilePhoto}`,
+          });
+
+          // Save the user's first name, last name, and photo URL to the database
+          const db = getFirestore();
+          const userRef = doc(collection(db, "users"), res.user.uid);
+          await setDoc(userRef, {
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            mobileNumber: user.mobileNumber,
+          });
+        } else {
+          throw new Error("signup unsuccessfully");
+        }
+
         if (!signupError.value && !signErr.value) {
           isSubmitted.value = true;
           setTimeout(() => {
             router.replace({ path: "/login" });
             isLoading.value = false;
-          }, "3000");
+          }, 3000);
         } else {
           isLoading.value = false;
-          signUpErr.value = "Email already exists.Try something else";
+          signupError.value = "Email already exists. Try something else";
         }
       } catch (err) {
         console.log(err);
@@ -207,5 +243,3 @@ export default {
   },
 };
 </script>
-
-<style scoped></style>

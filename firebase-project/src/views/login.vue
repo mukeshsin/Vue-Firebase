@@ -73,6 +73,12 @@ import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { validationErr } from "../composables/validation.js";
 import successToast from "../components/successToast.vue";
+import {
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+  TwitterAuthProvider,
+  getAuth,
+} from "firebase/auth";
 
 export default {
   name: "login-page",
@@ -111,7 +117,9 @@ export default {
 
     const handleGgLogin = async () => {
       try {
-        await store.dispatch("signInWithGoogle");
+        // Create a new FacebookAuthProvider instance
+        const provider = new GoogleAuthProvider();
+        await store.dispatch("googleSignin", { provider });
         // Google Sign-In successful, perform additional actions if needed
       } catch (error) {
         console.log(error);
@@ -121,7 +129,11 @@ export default {
 
     const handleFbLogin = async () => {
       try {
-        await store.dispatch("signInWithFacebook");
+        // Create a new FacebookAuthProvider instance
+        const provider = new FacebookAuthProvider();
+        // Get the Firebase auth instance
+        const auth = getAuth();
+        await store.dispatch("facebookSignin", { provider, auth });
         // Facebook Sign-In successful, perform additional actions if needed
       } catch (error) {
         console.log(error);
@@ -131,7 +143,12 @@ export default {
 
     const handleTwLogin = async () => {
       try {
-        await store.dispatch("signInWithTwitter");
+        // Create a new FacebookAuthProvider instance
+        const provider = new TwitterAuthProvider();
+
+        // Get the Firebase auth instance
+        const auth = getAuth();
+        await store.dispatch("twitterSignin", { provider, auth });
         // Twitter Sign-In successful, perform additional actions if needed
       } catch (error) {
         console.log(error);
