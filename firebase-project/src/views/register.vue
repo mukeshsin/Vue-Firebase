@@ -200,7 +200,6 @@ export default {
       isLoading,
       validateConfirmPassword,
       ...validationErr(),
-
       signUpErr,
       signErr,
       isSubmitted,

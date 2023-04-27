@@ -79,6 +79,20 @@ export const validationErr = () => {
     return true;
   };
 
+
+  const validatePasswordLogin = (value) => {
+    // if the field is empty
+    if (!value) {
+      return "This field is required";
+    }
+    // if the field is required a valid password
+    if(value.length < 3){
+      return "Require valid password"
+    }
+    // All is good
+    return true;
+  };
+
   return {
     validationErr,
     validateFirstName,
@@ -87,5 +101,6 @@ export const validationErr = () => {
     validateMobileNumber,
     validateProfilePhoto,
     validatePassword,
+    validatePasswordLogin
   };
 };

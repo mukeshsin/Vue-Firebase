@@ -16,7 +16,7 @@
       </button>
       <button
         @click="$router.push('/login')"
-        v-if="!isLoginPage()"
+        v-if="!isLoginPage"
         class="text-navBtn1 bg-navBtn2 border-none mr-2 cursor-pointer text-xs md:text-base lg:text-lg rounded-md p-1 font-bold tracking-widest hover:bg-navBtnHover"
       >
         Login
@@ -27,19 +27,18 @@
 
 <script>
 import { useRouter } from "vue-router";
+import { computed } from "vue";
 
 export default {
   name: "NavBar",
   setup() {
     const router = useRouter();
 
-    const isLoginPage = () => {
+    const isLoginPage = computed(() => {
       return router.currentRoute.value.path === "/login";
-    };
+    });
 
     return { isLoginPage };
   },
 };
 </script>
-
-<style scoped></style>
