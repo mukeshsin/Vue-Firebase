@@ -1,15 +1,18 @@
 import { createStore } from "vuex";
 import { auth } from "../firebase/config";
+import { getStorage, ref, uploadBytes } from "firebase/storage";
+
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { signInWithPopup } from "firebase/auth";
 
+
 export default createStore({
   state: {
     user: null,
-    post: null,
+    posts: [],
     signupError: null,
     signErr: null,
   },
@@ -19,12 +22,13 @@ export default createStore({
       state.user = payload;
       console.log("user state changed:", state.user);
     },
-    setPost(state, payload) {
-      state.user = payload;
-      console.log("post state changed:", state.post);
+    setPosts(state, payload) {
+      state.posts = payload;
+      console.log("post state changed:", state.posts);
     },
   },
   actions: {
+    //for signUp form
     async signup(
       { commit },
       {
@@ -49,12 +53,23 @@ export default createStore({
           mobileNumber,
           profilePhoto
         );
+
+        // Upload the photo to Firebase Storage
+        const storage = getStorage();
+        const storageRef = ref(
+          storage,
+          `users/${res.user.uid}/${profilePhoto.name}`
+        );
+        await uploadBytes(storageRef, profilePhoto);
+
         commit("setUser", res.user);
       } catch (error) {
         console.log(error);
         throw new Error(error.message);
       }
     },
+
+    // for loginPage
     async login({ commit }, { email, password }) {
       try {
         const res = await signInWithEmailAndPassword(auth, email, password);
@@ -107,16 +122,27 @@ export default createStore({
       }
     },
 
-    // create add post page which will add collection in firebase
-    async addPost({commit},{title,photo,slug,description}){
-      try{
-
-      }catch(error){
-       console.log(error);
-       throw new Error(error.message);
-      
+    //for add post
+    async addPost(
+      { commit },
+      { title, photo, slug, description, createdAt, updatedAt, updatedBy }
+    ) {
+      try {
+        const createPost = firebase.functions().httpsCallable('createPost');
+        const res = await createPost(auth,
+        title,
+        photo,
+        slug,
+        description,
+        createdAt,
+        updatedAt,
+        updatedBy);
+        commit("setPosts", res.user);
+      } catch (error) {
+        console.log(error);
+        throw new Error(error.message);
       }
-    }
+    },
 
-  }
+  },
 });

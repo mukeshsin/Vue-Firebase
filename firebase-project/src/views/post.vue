@@ -57,13 +57,19 @@
       </div>
     </Form>
   </div>
- 
+  <div class="ajdustToast">
+    <successToast v-if="isSubmitted">
+      <template v-slot:postContent>Created Post Successfully</template>
+    </successToast>
+  </div>
 </template>
 <script>
 import { Form, Field, ErrorMessage } from "vee-validate";
 import { validationErr } from "../composables/validation.js";
-
+import { useStore } from "vuex";
 import { ref, reactive } from "vue";
+import successToast from "../components/successToast.vue";
+import { getFirestore, doc, setDoc, collection } from "firebase/firestore";
 
 export default {
   name: "post-page",
@@ -71,7 +77,7 @@ export default {
     Form,
     Field,
     ErrorMessage,
-   
+    successToast,
   },
   setup() {
     const post = reactive({
@@ -79,14 +85,46 @@ export default {
       photo: "",
       slug: "",
       description: "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      updatedBy: "",
     });
     const error = ref(null);
-   
+    const store = useStore();
+    const isSubmitted = ref(false);
+
+    const handlePost = async () => {
+      try {
+        // login the user with Firebase Authentication
+        await store.dispatch("addPost", {
+          title: post.title,
+          photo: post.photo,
+          slug: post.slug,
+          description: post.description,
+        });
+        // Save the post collection in firebase collection
+        const db = getFirestore();
+        if (post.uid) {
+          const postRef = doc(collection(db, "users"), post.uid);
+          await setDoc(postRef, {
+            title: `${post.title}`,
+            photo: `${post.photo}`,
+            slug: `${post.slug}`,
+            description: `${post.description}`,
+          });
+        }
+        isSubmitted.value = true;
+      } catch (err) {
+        console.log(err);
+        error.value = err.message;
+      }
+    };
 
     return {
-      validationErr,
+      ...validationErr(),
       post,
       error,
+      handlePost,
     };
   },
 };

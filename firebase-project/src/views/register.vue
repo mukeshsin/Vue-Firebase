@@ -114,7 +114,6 @@ import { validationErr } from "../composables/validation.js";
 import successToast from "../components/successToast.vue";
 import { getAuth, updateProfile } from "firebase/auth";
 import { getFirestore, doc, setDoc, collection } from "firebase/firestore";
-import { getStorage, uploadBytes } from "firebase/storage";
 
 export default {
   name: "register-page",
@@ -165,13 +164,12 @@ export default {
 
       return true;
     };
-
     const handleSubmit = async () => {
       try {
         // Register the user with Firebase Authentication
         signupError.value = "";
         isLoading.value = true;
-        const res = await store.dispatch("signup", {
+        await store.dispatch("signup", {
           email: user.email,
           password: user.password,
           firstName: user.firstName,
@@ -181,51 +179,35 @@ export default {
           confirmPassword: user.confirmPassword,
         });
 
-        if (res && res.user) {
-          // check if res and res.user exists
-          const auth = getAuth();
-          // Upload the photo to Firebase Storage
-          const storage = getStorage();
-          const storageRef = ref(
-            storage,
-            `users/${res.user.uid}/${user.profilePhoto.name}`
-          );
-          console.log(user);
-          await uploadBytes(storageRef, user.profilePhoto);
+        // Update the user's detail with update user
+        const auth = getAuth();
+        await updateProfile(auth.currentUser, {
+          displayName: `${user.firstName} ${user.lastName}`,
+          phoneNumber: `${user.mobileNumber}`,
+          photoURL: `${user.profilePhoto}`,
+        });
 
-          // Update the user's detail with update user
-          await updateProfile(auth.currentUser, {
-            displayName: `${user.firstName} ${user.lastName}`,
-            phoneNumber: `${user.mobileNumber}`,
-            photoURL: `${user.profilePhoto}`,
-          });
-
-          // Save the user's first name, last name, and photo URL to the database
-          const db = getFirestore();
-          const userRef = doc(collection(db, "users"), res.user.uid);
+        // Save the user's first name, last name, and photo URL to the database
+        const db = getFirestore();
+        if (user.uid) {
+          const userRef = doc(collection(db, "users"), user.uid);
           await setDoc(userRef, {
-            email: user.email,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            mobileNumber: user.mobileNumber,
+            email: `${user.email}`,
+            firstName: `${user.firstName}`,
+            lastName: `${user.lastName}`,
+            mobileNumber: `${user.mobileNumber}`,
           });
-        } else {
-          throw new Error("signup unsuccessfully");
         }
 
-        if (!signupError.value && !signErr.value) {
-          isSubmitted.value = true;
-          setTimeout(() => {
-            router.replace({ path: "/login" });
-            isLoading.value = false;
-          }, 3000);
-        } else {
+        isSubmitted.value = true;
+        setTimeout(() => {
+          router.replace({ path: "/login" });
           isLoading.value = false;
-          signupError.value = "Email already exists. Try something else";
-        }
+        }, 3000);
       } catch (err) {
         console.log(err);
-        error.value = err.message;
+        signupError.value = "Email already exists. Try something else";
+        isLoading.value = false;
       }
     };
 
