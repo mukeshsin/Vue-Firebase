@@ -2,12 +2,12 @@ import { createStore } from "vuex";
 import { auth } from "../firebase/config";
 import { getStorage, ref, uploadBytes } from "firebase/storage";
 
+
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { signInWithPopup } from "firebase/auth";
-
+import { signInWithPopup,signInWithRedirect } from "firebase/auth";
 
 export default createStore({
   state: {
@@ -98,7 +98,7 @@ export default createStore({
     async facebookSignin({ commit }, { provider }) {
       try {
         // Sign in with Facebook using a popup
-        const res = await signInWithPopup(auth, provider);
+        const res = await signInWithRedirect(auth, provider);
 
         // Update the user state in Vuex store
         commit("setUser", res.user);
@@ -122,27 +122,6 @@ export default createStore({
       }
     },
 
-    //for add post
-    async addPost(
-      { commit },
-      { title, photo, slug, description, createdAt, updatedAt, updatedBy }
-    ) {
-      try {
-        const createPost = firebase.functions().httpsCallable('createPost');
-        const res = await createPost(auth,
-        title,
-        photo,
-        slug,
-        description,
-        createdAt,
-        updatedAt,
-        updatedBy);
-        commit("setPosts", res.user);
-      } catch (error) {
-        console.log(error);
-        throw new Error(error.message);
-      }
-    },
-
+    
   },
 });

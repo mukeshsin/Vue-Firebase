@@ -119,15 +119,7 @@ export const validationErr = () => {
     return true;
   };
 
-  const validateSlug = (value) => {
-    if (!value) {
-      return "This field is required";
-    }
-    if (value.length > 2) {
-      return "The Slug should be at least 2 characters long";
-    }
-    return true;
-  };
+
 
   const validateDescription = (value) => {
     if (!value) {
@@ -153,7 +145,6 @@ export const validationErr = () => {
     validatePasswordLogin,
     validateTitle,
     validatePhoto,
-    validateSlug,
-    validateDescription
+    validateDescription,
   };
 };

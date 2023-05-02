@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-4/5 h-full sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
+    class="w-4/5 h-full mb-4 sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
   >
     <h1 class="text-headColor tracking-widest text-base sm:text-lg md:text-2xl">
       POST
@@ -26,24 +26,12 @@
         :rules="validatePhoto"
       />
       <ErrorMessage class="flex text-red-500 mt-0.5" name="photo" />
-      <label class="flex text-white mt-3 mb-1 text-lg">Slug</label>
-      <Field
-        class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
-        v-model="post.slug"
-        name="slug"
-        type="text"
-        placeholder="Slug"
-        :rules="validateSlug"
-      />
-      <ErrorMessage class="flex text-red-500 mt-0.5" name="slug" />
-
       <label class="flex text-white mt-3 mb-1 text-lg">Description</label>
-      <Field
+      <textarea
         class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
         v-model="post.description"
         name="description"
         type="text"
-        placeholder="Description"
         :rules="validateDescription"
       />
       <ErrorMessage class="flex text-red-500 mt-0.5" name="description" />
@@ -59,17 +47,17 @@
   </div>
   <div class="ajdustToast">
     <successToast v-if="isSubmitted">
-      <template v-slot:postContent>Created Post Successfully</template>
+      <template v-slot:postContent>Added Post Successfully</template>
     </successToast>
   </div>
 </template>
 <script>
 import { Form, Field, ErrorMessage } from "vee-validate";
 import { validationErr } from "../composables/validation.js";
-import { useStore } from "vuex";
+import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
 import successToast from "../components/successToast.vue";
-import { getFirestore, doc, setDoc, collection } from "firebase/firestore";
+import { getFirestore, addDoc, collection } from "firebase/firestore";
 
 export default {
   name: "post-page",
@@ -83,48 +71,49 @@ export default {
     const post = reactive({
       title: "",
       photo: "",
-      slug: "",
       description: "",
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      updatedBy: "",
     });
     const error = ref(null);
-    const store = useStore();
     const isSubmitted = ref(false);
-
-    const handlePost = async () => {
+    // Function to generate a unique slug based on the post title
+    const generateSlug = (title) => {
+      const slug = title
+        .toLowerCase()
+        .replace(/\s+/g, "-")
+        .replace(/[^\w-]+/g, "");
+      return slug + "-" + Math.floor(Math.random() * 1000);
+    };
+    const handlePost = async (post) => {
       try {
-        // login the user with Firebase Authentication
-        await store.dispatch("addPost", {
-          title: post.title,
-          photo: post.photo,
-          slug: post.slug,
-          description: post.description,
-        });
-        // Save the post collection in firebase collection
         const db = getFirestore();
-        if (post.uid) {
-          const postRef = doc(collection(db, "users"), post.uid);
-          await setDoc(postRef, {
-            title: `${post.title}`,
+        const postsRef = collection(db, "posts");
+        const now = new Date();
+        const auth = getAuth();
+        const user = auth.currentUser;
+        if (post.title && post.photo && post.description) {
+          const slug = generateSlug(post.title);
+          await addDoc(postsRef, {
+            title: post.title,
+            slug: slug,
             photo: `${post.photo}`,
-            slug: `${post.slug}`,
-            description: `${post.description}`,
+            description: post.description,
+            createdAt: now,
+            updatedAt: now,
+            updatedBy: user.uid,
           });
+          isSubmitted.value = true;
         }
-        isSubmitted.value = true;
       } catch (err) {
         console.log(err);
         error.value = err.message;
       }
     };
-
     return {
       ...validationErr(),
       post,
       error,
       handlePost,
+      isSubmitted,
     };
   },
 };

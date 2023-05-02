@@ -108,7 +108,7 @@ export default {
         });
 
         isSubmitted.value = true;
-        router.push("/");
+        router.push("/post");
       } catch (err) {
         console.log(err);
         error.value = err.message;
