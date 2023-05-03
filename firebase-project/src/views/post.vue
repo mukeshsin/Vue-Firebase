@@ -27,14 +27,45 @@
       />
       <ErrorMessage class="flex text-red-500 mt-0.5" name="photo" />
       <label class="flex text-white mt-3 mb-1 text-lg">Description</label>
-      <textarea
+      <Field
         class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
         v-model="post.description"
         name="description"
-        type="text"
+        type="textarea"
         :rules="validateDescription"
       />
       <ErrorMessage class="flex text-red-500 mt-0.5" name="description" />
+      <label class="flex text-white mt-3 mb-1 text-lg">Tagged Users</label>
+      <div class="flex items-center">
+        <input
+          class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+          v-model="post.taggedUser"
+          name="taggedUser"
+          type="text"
+          placeholder="Enter a username to tag"
+        />
+
+        <button
+          class="w-16 h-12 bg-buttonBg ml-2 text-white rounded text-slate-600"
+          @click.prevent="addTaggedUser(post)"
+        >
+          ADD
+        </button>
+      </div>
+      <div class="flex flex-wrap mt-3">
+        <span
+          class="bg-gray-300 text-black py-1 px-2 rounded-lg text-lg text-sm mr-2 mb-2"
+          v-for="(user, index) in post.taggedUsers"
+          :key="index"
+        >
+          {{ user }}
+          <i
+            class="ml-2 fa fa-times cursor-pointer"
+            @click.prevent="removeTaggedUser(index)"
+          ></i>
+        </span>
+      </div>
+
       <div>
         <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>
         <button
@@ -72,7 +103,10 @@ export default {
       title: "",
       photo: "",
       description: "",
+      taggedUser: "",
+      taggedUsers: [],
     });
+
     const error = ref(null);
     const isSubmitted = ref(false);
     // Function to generate a unique slug based on the post title
@@ -83,6 +117,25 @@ export default {
         .replace(/[^\w-]+/g, "");
       return slug + "-" + Math.floor(Math.random() * 1000);
     };
+
+    const addTaggedUser = async (post) => {
+      try {
+        
+
+        if (post.taggedUser) {
+          if (!post.taggedUsers.includes(post.taggedUser)) {
+            post.taggedUsers.push(post.taggedUser);
+          }
+          post.taggedUser = "";
+          console.log(post.taggedUsers);
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    const removeTaggedUser = () => {};
+
     const handlePost = async (post) => {
       try {
         const db = getFirestore();
@@ -114,6 +167,8 @@ export default {
       error,
       handlePost,
       isSubmitted,
+      addTaggedUser,
+      removeTaggedUser,
     };
   },
 };
