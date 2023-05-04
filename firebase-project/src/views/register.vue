@@ -189,15 +189,13 @@ export default {
 
         // Save the user's first name, last name, and photo URL to the database
         const db = getFirestore();
-        if (user.uid) {
-          const userRef = doc(collection(db, "users"), user.uid);
-          await setDoc(userRef, {
-            email: `${user.email}`,
-            firstName: `${user.firstName}`,
-            lastName: `${user.lastName}`,
-            mobileNumber: `${user.mobileNumber}`,
-          });
-        }
+        const usersRef = doc(collection(db, "users"));
+        await setDoc(usersRef, {
+          email: `${user.email}`,
+          firstName: `${user.firstName}`,
+          lastName: `${user.lastName}`,
+          mobileNumber: `${user.mobileNumber}`,
+        });
 
         isSubmitted.value = true;
         setTimeout(() => {

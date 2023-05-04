@@ -27,11 +27,11 @@
       />
       <ErrorMessage class="flex text-red-500 mt-0.5" name="photo" />
       <label class="flex text-white mt-3 mb-1 text-lg">Description</label>
-      <Field
+      <textarea
         class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
         v-model="post.description"
         name="description"
-        type="textarea"
+        type="text"
         :rules="validateDescription"
       />
       <ErrorMessage class="flex text-red-500 mt-0.5" name="description" />
@@ -44,9 +44,8 @@
           type="text"
           placeholder="Enter a username to tag"
         />
-
         <button
-          class="w-16 h-12 bg-buttonBg ml-2 text-white rounded text-slate-600"
+          class="w-16 h-10 bg-buttonBg ml-2 text-white rounded text-slate-600"
           @click.prevent="addTaggedUser(post)"
         >
           ADD
@@ -88,8 +87,14 @@ import { validationErr } from "../composables/validation.js";
 import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
 import successToast from "../components/successToast.vue";
-import { getFirestore, addDoc, collection } from "firebase/firestore";
-
+import {
+  getFirestore,
+  addDoc,
+  collection,
+  doc,
+  updateDoc,
+  getDoc,
+} from "firebase/firestore";
 export default {
   name: "post-page",
   components: {
@@ -106,7 +111,6 @@ export default {
       taggedUser: "",
       taggedUsers: [],
     });
-
     const error = ref(null);
     const isSubmitted = ref(false);
     // Function to generate a unique slug based on the post title
@@ -118,23 +122,65 @@ export default {
       return slug + "-" + Math.floor(Math.random() * 1000);
     };
 
-    const addTaggedUser = async (post) => {
-      try {
-        
+    // const addTaggedUser = async () => {
+    //   try {
+    //     const auth =getAuth();
+    //     const user = auth.currentUser;
 
-        if (post.taggedUser) {
-          if (!post.taggedUsers.includes(post.taggedUser)) {
-            post.taggedUsers.push(post.taggedUser);
+    //     if (post.taggedUser) {
+    //       if (!post.taggedUsers.includes(user.uid)) {
+    //         post.taggedUsers.push(user.uid);
+    //       }
+    //       post.taggedUser = "";
+    //       console.log(post.taggedUsers);
+    //     }
+    //   } catch (error) {
+    //     console.log(error);
+    //   }
+    // };
+
+    const addTaggedUser = async (user, post) => {
+      try {
+        const db = getFirestore();
+        const usersRef = collection(db, "users", user.uid);
+        const userSnap = await getDoc(usersRef);
+        if (userSnap.exists()) {
+          if (post.taggedUser) {
+            // Check if user is already tagged
+            if (!post.taggedUsers.includes(user.uid)) {
+              // Add user to tagged users list
+              post.taggedUsers.push(user.uid);
+              // Update the post document in Firestore
+              await updateDoc(doc(db, "posts", post.id), {
+                taggedUsers: post.taggedUsers,
+              });
+            }
+            post.taggedUser = "";
+            console.log(post.taggedUsers);
           }
-          post.taggedUser = "";
-          console.log(post.taggedUsers);
         }
       } catch (error) {
         console.log(error);
+        error.value = error.message;
       }
     };
-
-    const removeTaggedUser = () => {};
+    const removeTaggedUser = async (uid, post) => {
+      try {
+        const db = getFirestore();
+        // Check if user is tagged in the post
+        if (post.taggedUsers.includes(uid)) {
+          const filteredTaggedUsers = post.taggedUsers.filter(
+            (taggedUser) => taggedUser !== uid
+          );
+          await updateDoc(doc(db, "posts", post.id), {
+            taggedUsers: filteredTaggedUsers,
+          });
+        }
+      } catch (error) {
+        console.log(error);
+        error.value = error.message;
+      }
+    };
 
     const handlePost = async (post) => {
       try {
