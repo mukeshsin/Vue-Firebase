@@ -35,35 +35,75 @@
         :rules="validateDescription"
       />
       <ErrorMessage class="flex text-red-500 mt-0.5" name="description" />
+
       <label class="flex text-white mt-3 mb-1 text-lg">Tagged Users</label>
-      <div class="flex items-center">
-        <input
-          class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
-          v-model="post.taggedUser"
-          name="taggedUser"
-          type="text"
-          placeholder="Enter a username to tag"
-        />
-        <button
-          class="w-16 h-10 bg-buttonBg ml-2 text-white rounded text-slate-600"
-          @click.prevent="addTaggedUser(post)"
-        >
-          ADD
-        </button>
+      <div class="relative">
+        <div class="flex items-center">
+          <input
+            class="w-full border-solid border-gray-400 outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+            v-model="post.searchTerm"
+            name="searchTerm"
+            type="text"
+            placeholder="Enter a user to search"
+            @input="searchTaggedUsers"
+          />
+        </div>
       </div>
+      <div class="relative">
+        <select
+          class="w-full border-solid border-gray-400 outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+        >
+          <option v-for="(user, index) in post.searchedUsers" :key="index">
+            {{ user.firstName }}
+          </option>
+        </select>
+      </div>
+
       <div class="flex flex-wrap mt-3">
         <span
           class="bg-gray-300 text-black py-1 px-2 rounded-lg text-lg text-sm mr-2 mb-2"
           v-for="(user, index) in post.taggedUsers"
           :key="index"
         >
-          {{ user }}
+          {{ user.firstName }}
           <i
             class="ml-2 fa fa-times cursor-pointer"
             @click.prevent="removeTaggedUser(index)"
           ></i>
         </span>
       </div>
+
+      <!-- <label class="flex text-white mt-3 mb-1 text-lg">Tagged Users</label>
+      <div class="flex items-center">
+        <select
+          class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+          v-model="post.selectedUser"
+          @input="searchTaggedUsers"
+        >
+          <option value="">Select a user</option>
+          <option
+            v-for="(user, index) in userInfo.users"
+            :key="index"
+            :value="user"
+          >
+            {{ user.firstName }}
+          </option>
+        </select>
+      </div>
+
+      <div class="flex flex-wrap mt-3">
+        <span
+          class="bg-gray-300 text-black py-1 px-2 rounded-lg text-lg text-sm mr-2 mb-2"
+          v-for="(user, index) in post.taggedUsers"
+          :key="index"
+        >
+          {{ user.firstName }}
+          <i
+            class="ml-2 fa fa-times cursor-pointer"
+            @click.prevent="removeTaggedUser(index)"
+          ></i>
+        </span>
+      </div> -->
 
       <div>
         <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>
@@ -91,9 +131,9 @@ import {
   getFirestore,
   addDoc,
   collection,
-  doc,
-  updateDoc,
-  getDoc,
+  getDocs,
+  query,
+  where,
 } from "firebase/firestore";
 export default {
   name: "post-page",
@@ -108,9 +148,15 @@ export default {
       title: "",
       photo: "",
       description: "",
-      taggedUser: "",
       taggedUsers: [],
+      searchTerm: "",
+      searchedUsers: [],
     });
+
+    const userInfo = reactive({
+      users: "",
+    });
+    const showDropdown = ref(false);
     const error = ref(null);
     const isSubmitted = ref(false);
     // Function to generate a unique slug based on the post title
@@ -122,64 +168,47 @@ export default {
       return slug + "-" + Math.floor(Math.random() * 1000);
     };
 
-    // const addTaggedUser = async () => {
-    //   try {
-    //     const auth =getAuth();
-    //     const user = auth.currentUser;
-
-    //     if (post.taggedUser) {
-    //       if (!post.taggedUsers.includes(user.uid)) {
-    //         post.taggedUsers.push(user.uid);
-    //       }
-    //       post.taggedUser = "";
-    //       console.log(post.taggedUsers);
-    //     }
-    //   } catch (error) {
-    //     console.log(error);
-    //   }
-    // };
-
-    const addTaggedUser = async (user, post) => {
+    const fetchUsers = async () => {
       try {
         const db = getFirestore();
-        const usersRef = collection(db, "users", user.uid);
-        const userSnap = await getDoc(usersRef);
-        if (userSnap.exists()) {
-          if (post.taggedUser) {
-            // Check if user is already tagged
-            if (!post.taggedUsers.includes(user.uid)) {
-              // Add user to tagged users list
-              post.taggedUsers.push(user.uid);
-              // Update the post document in Firestore
-              await updateDoc(doc(db, "posts", post.id), {
-                taggedUsers: post.taggedUsers,
-              });
-            }
-            post.taggedUser = "";
-            console.log(post.taggedUsers);
-          }
-        }
+        const usersRef = collection(db, "users");
+        const snapshot = await getDocs(usersRef);
+        const users = [];
+        snapshot.docs.map((doc) => {
+          const user = doc.data();
+          user.id = doc.id;
+          users.push(user);
+        });
+        userInfo.users = users;
+        console.log(userInfo.users);
       } catch (error) {
         console.log(error);
-        error.value = error.message;
       }
     };
-    const removeTaggedUser = async (uid, post) => {
+
+    const searchTaggedUsers = async () => {
       try {
         const db = getFirestore();
-        // Check if user is tagged in the post
-        if (post.taggedUsers.includes(uid)) {
-          const filteredTaggedUsers = post.taggedUsers.filter(
-            (taggedUser) => taggedUser !== uid
-          );
-          await updateDoc(doc(db, "posts", post.id), {
-            taggedUsers: filteredTaggedUsers,
-          });
+        const usersRef = collection(db, "users");
+        const q = query(usersRef, where("firstName", "==", post.searchTerm));
+        const snapshot = await getDocs(q);
+        post.searchedUsers = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        if (post.searchedUsers.length > 0) {
+          post.taggedUsers.push(post.searchedUsers[0]);
+          post.searchTerm = "";
+          this.showDropdown = true;
         }
       } catch (error) {
-        console.log(error);
-        error.value = error.message;
+        console.error(error);
+        // handle error here (show error message to user, etc.)
       }
+    };
+
+    const removeTaggedUser = (index) => {
+      post.taggedUsers.splice(index, 1);
     };
 
     const handlePost = async (post) => {
@@ -213,8 +242,11 @@ export default {
       error,
       handlePost,
       isSubmitted,
-      addTaggedUser,
+      searchTaggedUsers,
       removeTaggedUser,
+      userInfo,
+      fetchUsers,
+      showDropdown,
     };
   },
 };
