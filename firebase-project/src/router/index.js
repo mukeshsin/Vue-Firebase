@@ -26,6 +26,14 @@ const routes = [
       import(/* webpackChunkName: "postPage" */ "../views/post.vue"),
   },
 
+  {
+    path:"/postList",
+    name:"post-list",
+    component: () =>
+    import(/* webpackChunkName: "postListPage" */ "../views/postList.vue"),
+
+  }
+
 ];
 
 const router = createRouter({

@@ -61,6 +61,7 @@ export default createStore({
           `users/${res.user.uid}/${profilePhoto.name}`
         );
         await uploadBytes(storageRef, profilePhoto);
+     
 
         commit("setUser", res.user);
       } catch (error) {

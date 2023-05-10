@@ -65,7 +65,7 @@
           :value="user"
           @click.prevent="addTaggedUser(user)"
         >
-          {{ user.id }}
+          {{ user.firstName }}
         </li>
       </ul>
 
@@ -75,7 +75,7 @@
           v-for="(user, index) in post.taggedUsers"
           :key="index"
         >
-          {{ user.id }}
+          {{ user.firstName }}
           <i
             class="ml-2 fa fa-times cursor-pointer"
             @click.prevent="removeTaggedUser(index)"
@@ -104,6 +104,7 @@ import { validationErr } from "../composables/validation.js";
 import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
 import successToast from "../components/successToast.vue";
+
 import {
   getFirestore,
   addDoc,
@@ -111,7 +112,6 @@ import {
   getDocs,
   query,
   where,
-  
 } from "firebase/firestore";
 export default {
   name: "post-page",
@@ -126,8 +126,8 @@ export default {
       title: "",
       photo: "",
       description: "",
-      taggedUsers: [],
       taggedUser: "",
+      taggedUsers: [],
       searchedUsers: [],
       users: [],
     });
@@ -135,6 +135,7 @@ export default {
     const showList = ref(false);
     const error = ref(null);
     const isSubmitted = ref(false);
+
     // Function to generate a unique slug based on the post title
     const generateSlug = (title) => {
       const slug = title
@@ -148,7 +149,7 @@ export default {
       try {
         const db = getFirestore();
         const usersRef = collection(db, "users");
-        const q = query(usersRef, where("id", "==", post.taggedUser));
+        const q = query(usersRef, where("uid", "==", post.taggedUser));
         const usersSnap = await getDocs(q);
         const usersData = usersSnap.docs.map((doc) => doc.data());
         post.users = usersData;
@@ -160,7 +161,7 @@ export default {
       try {
         const db = getFirestore();
         const usersRef = collection(db, "users");
-        const q = query(usersRef, where("id", "==", post.taggedUser));
+        const q = query(usersRef, where("uid", "==", post.taggedUser));
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {
@@ -184,15 +185,17 @@ export default {
       }
     };
 
-    const addTaggedUser = async (id) => {
+    const addTaggedUser = async (uid) => {
       try {
-        if (id) {
-          if (!post.taggedUsers.includes(id)) {
-            post.taggedUsers.push(id);
+        if (uid) {
+          if (!post.taggedUsers.includes(uid)) {
+            post.taggedUsers.push(uid);
+          } else {
+            errorMessage.value = "User already tagged";
+            return;
           }
-        
-        
-          post.searchTerm = "";
+
+          post.taggedUser = "";
           showList.value = false;
         }
       } catch (error) {
@@ -211,17 +214,18 @@ export default {
         const now = new Date();
         const auth = getAuth();
         const user = auth.currentUser;
-        if (post.title && post.photo && post.description) {
+        if (post.title && post.photo) {
+          
           const slug = generateSlug(post.title);
           await addDoc(postsRef, {
             title: post.title,
             slug: slug,
-            photo: `${post.photo}`,
+            photo: post.photo,
             description: post.description,
             createdAt: now,
             updatedAt: now,
             updatedBy: user.uid,
-            
+            taggedUser:post.taggedUsers
           });
           isSubmitted.value = true;
         }
