@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-4/5 h-full mb-4 sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
+    class="w-4/5 h-full mb-4 mt-5 sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
   >
     <h1 class="text-headColor tracking-widest text-base sm:text-lg md:text-2xl">
       POST
@@ -19,21 +19,28 @@
       <label class="flex text-white mt-3 mb-1 text-lg">Photo</label>
       <Field
         class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
-        v-model="post.photo"
-        name="photo"
+        v-model="post.photoURL"
+        name="photoURL"
         type="file"
         placeholder="Photo"
         :rules="validatePhoto"
       />
       <ErrorMessage class="flex text-red-500 mt-0.5" name="photo" />
+
       <label class="flex text-white mt-3 mb-1 text-lg">Description</label>
       <Field
         class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
-        v-model="post.description"
-        name="description"
-        type="text"
+        :value="post.description"
+        :name="'description'"
+        :type="'text'"
         :rules="validateDescription"
-      />
+        v-slot="{ field }"
+      >
+        <textarea
+          class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+          v-bind="field"
+        ></textarea>
+      </Field>
       <ErrorMessage class="flex text-red-500 mt-0.5" name="description" />
 
       <label class="flex text-white mt-3 mb-1 text-lg">Tagged User</label>
@@ -104,7 +111,6 @@ import { validationErr } from "../composables/validation.js";
 import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
 import successToast from "../components/successToast.vue";
-
 import {
   getFirestore,
   addDoc,
@@ -124,7 +130,7 @@ export default {
   setup() {
     const post = reactive({
       title: "",
-      photo: "",
+      photoURL: "",
       description: "",
       taggedUser: "",
       taggedUsers: [],
@@ -135,7 +141,6 @@ export default {
     const showList = ref(false);
     const error = ref(null);
     const isSubmitted = ref(false);
-
     // Function to generate a unique slug based on the post title
     const generateSlug = (title) => {
       const slug = title
@@ -149,7 +154,7 @@ export default {
       try {
         const db = getFirestore();
         const usersRef = collection(db, "users");
-        const q = query(usersRef, where("uid", "==", post.taggedUser));
+        const q = query(usersRef, where("firstName", "==", post.taggedUser));
         const usersSnap = await getDocs(q);
         const usersData = usersSnap.docs.map((doc) => doc.data());
         post.users = usersData;
@@ -161,7 +166,7 @@ export default {
       try {
         const db = getFirestore();
         const usersRef = collection(db, "users");
-        const q = query(usersRef, where("uid", "==", post.taggedUser));
+        const q = query(usersRef, where("firstName", "==", post.taggedUser));
         const snapshot = await getDocs(q);
 
         if (snapshot.empty) {
@@ -207,25 +212,27 @@ export default {
       post.taggedUsers.splice(index, 1);
     };
 
-    const handlePost = async (post) => {
+  
+
+    const handlePost = async () => {
       try {
+        console.log("post", post);
         const db = getFirestore();
         const postsRef = collection(db, "posts");
         const now = new Date();
         const auth = getAuth();
         const user = auth.currentUser;
         if (post.title && post.photo) {
-          
           const slug = generateSlug(post.title);
           await addDoc(postsRef, {
             title: post.title,
             slug: slug,
-            photo: post.photo,
+            photo: post.photoURL,
             description: post.description,
             createdAt: now,
             updatedAt: now,
             updatedBy: user.uid,
-            taggedUser:post.taggedUsers
+            taggedUser: post.taggedUsers,
           });
           isSubmitted.value = true;
         }
@@ -236,6 +243,7 @@ export default {
     };
     return {
       ...validationErr(),
+
       post,
       error,
       handlePost,

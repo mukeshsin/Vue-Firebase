@@ -1,13 +1,14 @@
 import { createStore } from "vuex";
 import { auth } from "../firebase/config";
-import { getStorage, ref, uploadBytes } from "firebase/storage";
-
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { updateDoc, doc } from "firebase/firestore";
 
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
 } from "firebase/auth";
-import { signInWithPopup,signInWithRedirect } from "firebase/auth";
+import { signInWithPopup, signInWithRedirect } from "firebase/auth";
+import { getFirestore } from "@firebase/firestore";
 
 export default createStore({
   state: {
@@ -61,7 +62,19 @@ export default createStore({
           `users/${res.user.uid}/${profilePhoto.name}`
         );
         await uploadBytes(storageRef, profilePhoto);
-     
+
+        // Get the download URL of the uploaded image
+        const downloadURL = await getDownloadURL(storageRef);
+
+        // Log the download URL to the console
+        console.log(downloadURL);
+
+        // Save the download URL in Firestore
+        const db = getFirestore();
+        const usersRef = doc(db, "users", res.user.uid);
+        await updateDoc(usersRef, {
+          photoURL: downloadURL,
+        });
 
         commit("setUser", res.user);
       } catch (error) {
@@ -122,7 +135,5 @@ export default createStore({
         throw new Error(error.message);
       }
     },
-
-    
   },
 });

@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-4/5 h-full sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
+    class="w-4/5 h-full sm:mx-auto mt-5 sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
   >
     <h1 class="text-headColor tracking-widest text-base sm:text-lg md:text-2xl">
       LOGIN FORM
@@ -79,7 +79,6 @@ import {
   TwitterAuthProvider,
   getAuth,
 } from "firebase/auth";
-
 export default {
   name: "login-page",
   components: {
@@ -97,16 +96,13 @@ export default {
     const store = useStore();
     const router = useRouter();
     const isSubmitted = ref(false);
-
     const handleLogin = async () => {
       try {
         // login the user with Firebase Authentication
-
         await store.dispatch("login", {
           email: user.email,
           password: user.password,
         });
-
         isSubmitted.value = true;
         router.push("/post");
       } catch (err) {
@@ -114,7 +110,6 @@ export default {
         error.value = err.message;
       }
     };
-
     const handleGgLogin = async () => {
       try {
         // Create a new FacebookAuthProvider instance
@@ -126,7 +121,6 @@ export default {
         // Handle error
       }
     };
-
     const handleFbLogin = async () => {
       try {
         // Create a new FacebookAuthProvider instance
@@ -140,12 +134,10 @@ export default {
         // Handle error
       }
     };
-
     const handleTwLogin = async () => {
       try {
         // Create a new FacebookAuthProvider instance
         const provider = new TwitterAuthProvider();
-
         // Get the Firebase auth instance
         const auth = getAuth();
         await store.dispatch("twitterSignin", { provider, auth });
@@ -155,7 +147,6 @@ export default {
         // Handle error
       }
     };
-
     return {
       user,
       error,

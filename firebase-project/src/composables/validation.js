@@ -122,12 +122,12 @@ export const validationErr = () => {
 
 
   const validateDescription = (value) => {
+    console.log("value", value);
     if (!value) {
       return "This field is required";
     }
-    const wordCount = value.split(" ").length;
-    if (wordCount < 5) {
-      return "The description should be at least 2 words long";
+    if (value.length < 20) {
+      return "The description should be at least 20 characters long";
     }
     return true;
   };

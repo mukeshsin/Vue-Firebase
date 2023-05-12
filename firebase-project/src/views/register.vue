@@ -1,6 +1,6 @@
 <template>
   <div
-    class="w-4/5 h-full sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border mb-3"
+    class="w-4/5 h-full sm:mx-auto mt-5 sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border mb-3"
   >
     <h1 class="text-headColor tracking-widest text-sm sm:text-lg md:text-2xl">
       REGISTRATION FORM
@@ -133,13 +133,11 @@ export default {
       profilePhoto: "",
       confirmPassword: "",
     });
-
     const error = ref(null);
     const store = useStore();
     const router = useRouter();
     const isLoading = ref(false);
     const isSubmitted = ref(false);
-
     //errors
     const signUpErr = ref("");
     const signupError = computed(() => {
@@ -148,7 +146,6 @@ export default {
     const signErr = computed(() => {
       return store.state.signErr;
     });
-
     const validateConfirmPassword = (confirmPassword, password) => {
       //if the field is empty
       if (!confirmPassword) {
@@ -158,10 +155,8 @@ export default {
       if (confirmPassword !== user.password) {
         return "Passwords do not match";
       }
-
       console.log(password);
       console.log(confirmPassword);
-
       return true;
     };
     const handleSubmit = async () => {
@@ -178,24 +173,25 @@ export default {
           profilePhoto: user.profilePhoto,
           confirmPassword: user.confirmPassword,
         });
-
         // Update the user's detail with update user
         const auth = getAuth();
         await updateProfile(auth.currentUser, {
           displayName: `${user.firstName} ${user.lastName}`,
           phoneNumber: `${user.mobileNumber}`,
-          photoURL: `${user.profilePhoto}`,
+         
+       
         });
 
         // Save the user's first name, last name, and photo URL to the database
         const db = getFirestore();
-        const usersRef = doc(collection(db, "users"),auth.currentUser.uid);
+        const usersRef = doc(collection(db, "users"), auth.currentUser.uid);
         await setDoc(usersRef, {
           email: `${user.email}`,
           firstName: `${user.firstName}`,
           lastName: `${user.lastName}`,
           mobileNumber: `${user.mobileNumber}`,
-          uid:auth.currentUser.uid
+          uid: auth.currentUser.uid,
+          // photoURL:`${user.profilePhoto}`
         });
 
         isSubmitted.value = true;
@@ -209,7 +205,6 @@ export default {
         isLoading.value = false;
       }
     };
-
     return {
       user,
       handleSubmit,
