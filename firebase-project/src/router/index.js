@@ -32,6 +32,14 @@ const routes = [
     component: () =>
     import(/* webpackChunkName: "postListPage" */ "../views/postList.vue"),
 
+  },
+
+  {
+    path:"/comments",
+    name:"comment-box",
+    component: () =>
+    import(/* webpackChunkName: "commentsPage" */ "../views/comments.vue"),
+
   }
 
 ];

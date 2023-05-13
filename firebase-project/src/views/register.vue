@@ -113,7 +113,13 @@ import { useRouter } from "vue-router";
 import { validationErr } from "../composables/validation.js";
 import successToast from "../components/successToast.vue";
 import { getAuth, updateProfile } from "firebase/auth";
-import { getFirestore, doc, setDoc, collection } from "firebase/firestore";
+// import {
+//   getFirestore,
+//   doc,
+//   setDoc,
+//   collection,
+
+// } from "firebase/firestore";
 
 export default {
   name: "register-page",
@@ -173,26 +179,24 @@ export default {
           profilePhoto: user.profilePhoto,
           confirmPassword: user.confirmPassword,
         });
+
         // Update the user's detail with update user
         const auth = getAuth();
         await updateProfile(auth.currentUser, {
           displayName: `${user.firstName} ${user.lastName}`,
           phoneNumber: `${user.mobileNumber}`,
-         
-       
         });
 
-        // Save the user's first name, last name, and photo URL to the database
-        const db = getFirestore();
-        const usersRef = doc(collection(db, "users"), auth.currentUser.uid);
-        await setDoc(usersRef, {
-          email: `${user.email}`,
-          firstName: `${user.firstName}`,
-          lastName: `${user.lastName}`,
-          mobileNumber: `${user.mobileNumber}`,
-          uid: auth.currentUser.uid,
-          // photoURL:`${user.profilePhoto}`
-        });
+        // // Save the user's first name, last name, and photo URL to the database
+        // const db = getFirestore();
+        // const usersRef = doc(collection(db, "users"), auth.currentUser.uid);
+        // await setDoc(usersRef, {
+        //   email: `${user.email}`,
+        //   firstName: `${user.firstName}`,
+        //   lastName: `${user.lastName}`,
+        //   mobileNumber: `${user.mobileNumber}`,
+        //   uid: auth.currentUser.uid,
+        // });
 
         isSubmitted.value = true;
         setTimeout(() => {
@@ -205,6 +209,7 @@ export default {
         isLoading.value = false;
       }
     };
+
     return {
       user,
       handleSubmit,

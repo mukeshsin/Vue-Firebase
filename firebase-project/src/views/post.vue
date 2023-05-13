@@ -111,6 +111,7 @@ import { validationErr } from "../composables/validation.js";
 import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
 import successToast from "../components/successToast.vue";
+import { getStorage, uploadBytes, getDownloadURL } from "firebase/storage";
 import {
   getFirestore,
   addDoc,
@@ -212,8 +213,6 @@ export default {
       post.taggedUsers.splice(index, 1);
     };
 
-  
-
     const handlePost = async () => {
       try {
         console.log("post", post);
@@ -223,11 +222,19 @@ export default {
         const auth = getAuth();
         const user = auth.currentUser;
         if (post.title && post.photo) {
+          // Save the photo to Firebase Storage
+          const storage = getStorage();
+          const storageRef = (storage, `images/${post.photo.name}`);
+          const snapshot=await uploadBytes(storageRef, post.photo);
+
+          // Get the download URL for the saved photo
+          const photoURL = await getDownloadURL(snapshot.ref);
+
           const slug = generateSlug(post.title);
           await addDoc(postsRef, {
             title: post.title,
             slug: slug,
-            photo: post.photoURL,
+            photo: photoURL,
             description: post.description,
             createdAt: now,
             updatedAt: now,

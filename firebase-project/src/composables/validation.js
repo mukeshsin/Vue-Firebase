@@ -131,6 +131,15 @@ export const validationErr = () => {
     }
     return true;
   };
+
+  const validateCommentTitle = (value) => {
+    if (!value) {
+      return "Comment title is required.";
+    } else if (value.length < 5) {
+      return "Comment title must be at least 5 characters long.";
+    }
+    return true;
+  };
   
 
 
@@ -146,5 +155,6 @@ export const validationErr = () => {
     validateTitle,
     validatePhoto,
     validateDescription,
+    validateCommentTitle
   };
 };
