@@ -155,6 +155,6 @@ export const validationErr = () => {
     validateTitle,
     validatePhoto,
     validateDescription,
-    validateCommentTitle
+    validateCommentTitle,
   };
 };

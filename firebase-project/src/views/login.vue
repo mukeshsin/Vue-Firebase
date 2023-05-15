@@ -1,4 +1,5 @@
 <template>
+<div>
   <div
     class="w-4/5 h-full sm:mx-auto mt-5 sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
   >
@@ -63,6 +64,7 @@
     <successToast v-if="isSubmitted">
       <template v-slot:loginContent>Login Successfully</template>
     </successToast>
+  </div>
   </div>
 </template>
 

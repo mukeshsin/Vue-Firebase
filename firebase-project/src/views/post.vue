@@ -1,108 +1,123 @@
 <template>
-  <div
-    class="w-4/5 h-full mb-4 mt-5 sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
-  >
-    <h1 class="text-headColor tracking-widest text-base sm:text-lg md:text-2xl">
-      POST
-    </h1>
-    <Form class="w-3/4 mx-auto" @submit="handlePost">
-      <label class="flex text-white mt-3 mb-1 text-lg">Title</label>
-      <Field
-        class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
-        v-model="post.title"
-        name="title"
-        type="title"
-        placeholder="Title"
-        :rules="validateTitle"
-      />
-      <ErrorMessage class="flex text-red-500 mt-0.5" name="title" />
-      <label class="flex text-white mt-3 mb-1 text-lg">Photo</label>
-      <Field
-        class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
-        v-model="post.photoURL"
-        name="photoURL"
-        type="file"
-        placeholder="Photo"
-        :rules="validatePhoto"
-      />
-      <ErrorMessage class="flex text-red-500 mt-0.5" name="photo" />
-
-      <label class="flex text-white mt-3 mb-1 text-lg">Description</label>
-      <Field
-        class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
-        :value="post.description"
-        :name="'description'"
-        :type="'text'"
-        :rules="validateDescription"
-        v-slot="{ field }"
+  <div>
+    <div
+      class="w-4/5 h-full mb-4 mt-5 sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
+    >
+      <h1
+        class="text-headColor tracking-widest text-base sm:text-lg md:text-2xl"
       >
-        <textarea
-          class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
-          v-bind="field"
-        ></textarea>
-      </Field>
-      <ErrorMessage class="flex text-red-500 mt-0.5" name="description" />
-
-      <label class="flex text-white mt-3 mb-1 text-lg">Tagged User</label>
-      <div class="flex items-center">
-        <input
-          class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
-          v-model="post.taggedUser"
-          name="taggedUser"
-          type="text"
-          placeholder="Enter a username to search"
-          @input="searchTaggedUsers"
-          @keyup="getUsers(user)"
+        POST
+      </h1>
+      <Form class="w-3/4 mx-auto" @submit="handlePost">
+        <label class="flex text-white mt-3 mb-1 text-lg">Title</label>
+        <Field
+          class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
+          v-model="post.title"
+          name="title"
+          type="title"
+          placeholder="Title"
+          :rules="validateTitle"
         />
-      </div>
-      <div
-        v-if="errorMessage"
-        class="flex items-center justify-between px-2 mt-1 bg-red-100 text-red-700"
-      >
-        {{ errorMessage }}
-      </div>
-      <ul
-        v-if="showList"
-        class="mt-1 shadow-md bg-white w-full grid grid-cols-1 grid-rows-auto gap-2"
-      >
-        <li
-          class="text-left border-b border-gray-600 m-1"
-          v-for="(user, index) in post.users"
-          :key="index"
-          :value="user"
-          @click.prevent="addTaggedUser(user)"
-        >
-          {{ user.firstName }}
-        </li>
-      </ul>
+        <ErrorMessage class="flex text-red-500 mt-0.5" name="title" />
+        <label class="flex text-white mt-3 mb-1 text-lg">Photo</label>
+        <Field
+          class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+          v-model="post.photo"
+          name="photo"
+          type="file"
+          placeholder="Photo"
+          :rules="validatePhoto"
+        />
+        <ErrorMessage class="flex text-red-500 mt-0.5" name="photo" />
 
-      <div class="flex flex-wrap mt-3">
-        <span
-          class="bg-gray-300 text-black py-1 px-2 rounded-lg text-lg text-sm mr-2 mb-2"
-          v-for="(user, index) in post.taggedUsers"
-          :key="index"
+        <label class="flex text-white mt-3 mb-1 text-lg">Description</label>
+        <Field
+          class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+          :value="post.description"
+          :name="'description'"
+          :type="'textarea'"
+          :rules="validateDescription"
+          v-slot="{ field }"
         >
-          {{ user.firstName }}
-          <i
-            class="ml-2 fa fa-times cursor-pointer"
-            @click.prevent="removeTaggedUser(index)"
-          ></i>
-        </span>
-      </div>
-      <div>
-        <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>
-        <button
-          class="w-full h-45 bg-buttonBg mt-3 mb-3 border-0 tracking-wider p-2 md:text-base lg:text-lg mb-6"
+          <textarea
+            class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+            v-bind="field"
+          ></textarea>
+        </Field>
+        <ErrorMessage class="flex text-red-500 mt-0.5" name="description" />
+
+        <label class="flex text-white mt-3 mb-1 text-lg">Tagged User</label>
+        <div class="flex items-center">
+          <input
+            class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+            v-model="post.taggedUser"
+            name="taggedUser"
+            type="text"
+            placeholder="Enter a username to search"
+            @input="searchTaggedUsers"
+            @keyup="getUsers(user)"
+          />
+        </div>
+        <div
+          v-if="errorMessage"
+          class="flex items-center justify-between px-2 mt-1 bg-red-100 text-red-700"
         >
-          ADD POST
-        </button>
-      </div>
-    </Form>
-  </div>
-  <div class="ajdustToast">
-    <successToast v-if="isSubmitted">
-      <template v-slot:postContent>Added Post Successfully</template>
-    </successToast>
+          {{ errorMessage }}
+        </div>
+        <ul
+          v-if="showList"
+          class="mt-1 shadow-md bg-white w-full grid grid-cols-1 grid-rows-auto gap-2"
+        >
+          <li
+            class="text-left border-b border-gray-600 m-1"
+            v-for="(user, index) in post.users"
+            :key="index"
+            :value="user"
+            @click.prevent="addTaggedUser(user)"
+          >
+            {{ user.firstName }}
+          </li>
+        </ul>
+
+        <div class="flex flex-wrap mt-3">
+          <span
+            class="bg-gray-300 text-black py-1 px-2 rounded-lg text-lg text-sm mr-2 mb-2"
+            v-for="(user, index) in post.taggedUsers"
+            :key="index"
+          >
+            {{ user.firstName }}
+            <i
+              class="ml-2 fa fa-times cursor-pointer"
+              @click.prevent="removeTaggedUser(index)"
+            ></i>
+          </span>
+        </div>
+        <label class="flex text-white mt-3 mb-1 text-lg">Comment</label>
+        <Field
+          class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+          v-model="post.comments"
+          name="comment"
+          type="text"
+          placeholder="Add a comment"
+          :rules="validateCommentTitle"
+        />
+        <ErrorMessage class="flex text-red-500 mt-0.5" name="comment" />
+        <div>
+          <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>
+          <button
+            class="w-full h-45 bg-buttonBg mt-3 mb-3 border-0 tracking-wider p-2 md:text-base lg:text-lg mb-6"
+            @keyup="addComment"
+          >
+            ADD POST
+          </button>
+        </div>
+      </Form>
+    </div>
+    <div class="ajdustToast">
+      <successToast v-if="isSubmitted">
+        <template v-slot:postContent>Added Post Successfully</template>
+      </successToast>
+    </div>
   </div>
 </template>
 <script>
@@ -111,7 +126,7 @@ import { validationErr } from "../composables/validation.js";
 import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
 import successToast from "../components/successToast.vue";
-import { getStorage, uploadBytes, getDownloadURL } from "firebase/storage";
+import { uploadPostPhoto } from "../composables/storage.js";
 import {
   getFirestore,
   addDoc,
@@ -131,12 +146,13 @@ export default {
   setup() {
     const post = reactive({
       title: "",
-      photoURL: "",
+      photo: "",
       description: "",
       taggedUser: "",
       taggedUsers: [],
       searchedUsers: [],
       users: [],
+      comments: "",
     });
     const errorMessage = ref(null);
     const showList = ref(false);
@@ -212,7 +228,6 @@ export default {
     const removeTaggedUser = (index) => {
       post.taggedUsers.splice(index, 1);
     };
-
     const handlePost = async () => {
       try {
         console.log("post", post);
@@ -222,24 +237,18 @@ export default {
         const auth = getAuth();
         const user = auth.currentUser;
         if (post.title && post.photo) {
-          // Save the photo to Firebase Storage
-          const storage = getStorage();
-          const storageRef = (storage, `images/${post.photo.name}`);
-          const snapshot=await uploadBytes(storageRef, post.photo);
-
-          // Get the download URL for the saved photo
-          const photoURL = await getDownloadURL(snapshot.ref);
-
+          const downloadURL = await uploadPostPhoto(user, post.photo);
           const slug = generateSlug(post.title);
           await addDoc(postsRef, {
             title: post.title,
             slug: slug,
-            photo: photoURL,
+            photo: downloadURL,
             description: post.description,
             createdAt: now,
             updatedAt: now,
             updatedBy: user.uid,
             taggedUser: post.taggedUsers,
+            comment: post.comments,
           });
           isSubmitted.value = true;
         }
@@ -248,9 +257,9 @@ export default {
         error.value = err.message;
       }
     };
+
     return {
       ...validationErr(),
-
       post,
       error,
       handlePost,

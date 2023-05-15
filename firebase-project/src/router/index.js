@@ -34,13 +34,17 @@ const routes = [
 
   },
 
-  {
-    path:"/comments",
-    name:"comment-box",
-    component: () =>
-    import(/* webpackChunkName: "commentsPage" */ "../views/comments.vue"),
 
-  }
+  {
+    path:"/singlePost",
+    name:"singlePost",
+    component: () =>
+    import(/* webpackChunkName: "singlePost" */ "../views/singlePostList.vue"),
+
+  },
+
+
+
 
 ];
 
