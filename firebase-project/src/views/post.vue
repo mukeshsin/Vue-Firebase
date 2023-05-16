@@ -33,7 +33,6 @@
         <label class="flex text-white mt-3 mb-1 text-lg">Description</label>
         <Field
           class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
-          :value="post.description"
           :name="'description'"
           :type="'textarea'"
           :rules="validateDescription"
@@ -42,8 +41,10 @@
           <textarea
             class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
             v-bind="field"
+            v-model="post.description"
           ></textarea>
         </Field>
+
         <ErrorMessage class="flex text-red-500 mt-0.5" name="description" />
 
         <label class="flex text-white mt-3 mb-1 text-lg">Tagged User</label>
@@ -248,7 +249,6 @@ export default {
             updatedAt: now,
             updatedBy: user.uid,
             taggedUser: post.taggedUsers,
-            comment: post.comments,
           });
           isSubmitted.value = true;
         }
