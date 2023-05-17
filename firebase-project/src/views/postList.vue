@@ -43,7 +43,7 @@
             </p>
             <button
               v-if="posts.length > 0"
-              @click="showPostDetail(postId)"
+              @click="showPostDetail(post.uid)"
               class="mt-3 bg-blue-500 hover:bg-blue-700 text-white font-bold text-xs py-1 px-1 rounded"
             >
               View Details <i class="fa-solid fa-arrow-right"></i>
@@ -90,8 +90,8 @@ export default {
 
     const getAllPosts = async () => {
       isLoading.value = true;
-      const q = query(postsRef, orderBy("createdAt", "desc"), limit(batchSize));
-      const querySnapshot = await getDocs(q);
+      const postData = query(postsRef, orderBy("createdAt", "desc"), limit(batchSize));
+      const querySnapshot = await getDocs(postData);
       posts.value = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -103,13 +103,13 @@ export default {
     const loadMorePosts = async () => {
       isLoading.value = true;
       if (lastVisiblePost.value) {
-        const q = query(
+        const postData = query(
           postsRef,
           orderBy("createdAt", "desc"),
           startAfter(lastVisiblePost.value),
           limit(batchSize)
         );
-        const querySnapshot = await getDocs(q);
+        const querySnapshot = await getDocs(postData);
         const newPosts = querySnapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -121,8 +121,8 @@ export default {
       isLoading.value = false;
     };
 
-    const showPostDetail = () => {
-      router.push({ name: "singlePost" });
+    const showPostDetail = (key) => {
+      router.push(`/single-post/${key}`);
     };
 
     const showLoadMoreButton = computed(() => {

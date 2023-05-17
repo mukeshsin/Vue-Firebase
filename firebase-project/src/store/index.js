@@ -76,6 +76,7 @@ export default createStore({
             firstName,
             lastName,
             mobileNumber,
+            uid:res.user.uid
           },
           { merge: true }
         );

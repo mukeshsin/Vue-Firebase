@@ -34,8 +34,8 @@ const routes = [
   },
 
   {
-    path: "/post/:postId",
-    name: "singlePost",
+    path: "/post/:uid",
+    name: "single-post",
     component: () =>
       import(
         /* webpackChunkName: "singlePost" */ "../views/singlePostList.vue"

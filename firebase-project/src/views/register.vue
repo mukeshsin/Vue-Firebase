@@ -89,7 +89,7 @@
 
         <ErrorMessage class="flex text-red-500 mt-0.5" name="confirmPassword" />
         <span v-if="isLoading">
-          <i class="fa fa-spinner fa-spin text-lg text-white mt-1"></i>
+          <i class="fa fa-spinner fa-spin text-2xl text-white mt-1"></i>
         </span>
         <div>
           <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>

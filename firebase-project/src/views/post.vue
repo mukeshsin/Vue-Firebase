@@ -93,21 +93,26 @@
             ></i>
           </span>
         </div>
-        <label class="flex text-white mt-3 mb-1 text-lg">Comment</label>
+
+        <label class="flex text-white mt-1 mb-1 text-lg">Comment</label>
         <Field
-          class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg"
+          class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
           v-model="post.comments"
           name="comment"
-          type="text"
-          placeholder="Add a comment"
-          :rules="validateCommentTitle"
+          type="comment"
+          placeholder="Comment"
+          :rules="validateComment"
+          @click.prevent="handleComment"
         />
         <ErrorMessage class="flex text-red-500 mt-0.5" name="comment" />
+
+        <span v-if="isLoading">
+          <i class="fa fa-spinner fa-spin text-2xl text-white mt-1"></i>
+        </span>
         <div>
           <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>
           <button
             class="w-full h-45 bg-buttonBg mt-3 mb-3 border-0 tracking-wider p-2 md:text-base lg:text-lg mb-6"
-            @keyup="addComment"
           >
             ADD POST
           </button>
@@ -128,6 +133,7 @@ import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
 import successToast from "../components/successToast.vue";
 import { uploadPostPhoto } from "../composables/storage.js";
+import { useRouter } from "vue-router";
 import {
   getFirestore,
   addDoc,
@@ -135,6 +141,7 @@ import {
   getDocs,
   query,
   where,
+  updateDoc,
 } from "firebase/firestore";
 export default {
   name: "post-page",
@@ -153,12 +160,14 @@ export default {
       taggedUsers: [],
       searchedUsers: [],
       users: [],
-      comments: "",
+      comments: [],
     });
     const errorMessage = ref(null);
     const showList = ref(false);
     const error = ref(null);
     const isSubmitted = ref(false);
+    const isLoading = ref(false);
+    const router = useRouter();
     // Function to generate a unique slug based on the post title
     const generateSlug = (title) => {
       const slug = title
@@ -172,8 +181,11 @@ export default {
       try {
         const db = getFirestore();
         const usersRef = collection(db, "users");
-        const q = query(usersRef, where("firstName", "==", post.taggedUser));
-        const usersSnap = await getDocs(q);
+        const userData = query(
+          usersRef,
+          where("firstName", "==", post.taggedUser)
+        );
+        const usersSnap = await getDocs(userData);
         const usersData = usersSnap.docs.map((doc) => doc.data());
         post.users = usersData;
       } catch (error) {
@@ -184,8 +196,11 @@ export default {
       try {
         const db = getFirestore();
         const usersRef = collection(db, "users");
-        const q = query(usersRef, where("firstName", "==", post.taggedUser));
-        const snapshot = await getDocs(q);
+        const userData = query(
+          usersRef,
+          where("firstName", "==", post.taggedUser)
+        );
+        const snapshot = await getDocs(userData);
 
         if (snapshot.empty) {
           post.searchedUsers = [];
@@ -229,9 +244,34 @@ export default {
     const removeTaggedUser = (index) => {
       post.taggedUsers.splice(index, 1);
     };
+
+    //handleComment on a post
+    const handleComment = async (postId, commentTitle) => {
+      try {
+        const db = getFirestore();
+        const auth = getAuth();
+        const user = auth.currentUser;
+        const now = new Date();
+        const commentsRef = collection(db, "comments");
+
+        // Create a new comment document
+        const newCommentRef = await addDoc(commentsRef, {
+          postId: postId,
+          commentTitle: commentTitle,
+          userId: user.uid,
+          createdAt: now,
+          updatedAt: now,
+        });
+
+        console.log("Comment added successfully with ID:", newCommentRef.id);
+      } catch (error) {
+        console.error("Error adding comment:", error);
+      }
+    };
+
     const handlePost = async () => {
       try {
-        console.log("post", post);
+        (isLoading.value = true), console.log("post", post);
         const db = getFirestore();
         const postsRef = collection(db, "posts");
         const now = new Date();
@@ -240,7 +280,7 @@ export default {
         if (post.title && post.photo) {
           const downloadURL = await uploadPostPhoto(user, post.photo);
           const slug = generateSlug(post.title);
-          await addDoc(postsRef, {
+          const newPostRef = await addDoc(postsRef, {
             title: post.title,
             slug: slug,
             photo: downloadURL,
@@ -250,7 +290,15 @@ export default {
             updatedBy: user.uid,
             taggedUser: post.taggedUsers,
           });
+
+          const postId = newPostRef.id; // Get the generated post ID
+
+          // Update the post with the generated ID
+          await updateDoc(newPostRef, { uid: postId });
+
           isSubmitted.value = true;
+          isLoading.value = false;
+          router.push("/postList");
         }
       } catch (err) {
         console.log(err);
@@ -270,6 +318,8 @@ export default {
       searchTaggedUsers,
       removeTaggedUser,
       errorMessage,
+      isLoading,
+      handleComment,
     };
   },
 };

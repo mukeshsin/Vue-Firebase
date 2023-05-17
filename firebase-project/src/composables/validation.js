@@ -79,15 +79,14 @@ export const validationErr = () => {
     return true;
   };
 
-
   const validatePasswordLogin = (value) => {
     // if the field is empty
     if (!value) {
       return "This field is required";
     }
     // if the field is required a valid password
-    if(value.length < 3){
-      return "Require valid password"
+    if (value.length < 3) {
+      return "Require valid password";
     }
     // All is good
     return true;
@@ -95,9 +94,9 @@ export const validationErr = () => {
 
   // validate for post page
 
-  const validateTitle =(value)=>{
-     // if the field is empty
-     if (!value) {
+  const validateTitle = (value) => {
+    // if the field is empty
+    if (!value) {
       return "This field is required";
     }
     // if firstName is less than 4 characters
@@ -106,8 +105,7 @@ export const validationErr = () => {
     }
     // All is good
     return true;
-
-  }
+  };
 
   const validatePhoto = (file) => {
     if (!file) {
@@ -118,8 +116,6 @@ export const validationErr = () => {
     }
     return true;
   };
-
-
 
   const validateDescription = (value) => {
     console.log("value", value);
@@ -132,7 +128,7 @@ export const validationErr = () => {
     return true;
   };
 
-  const validateCommentTitle = (value) => {
+  const validateComment = (value) => {
     if (!value) {
       return "Comment title is required.";
     } else if (value.length < 5) {
@@ -140,8 +136,6 @@ export const validationErr = () => {
     }
     return true;
   };
-  
-
 
   return {
     validationErr,
@@ -155,6 +149,6 @@ export const validationErr = () => {
     validateTitle,
     validatePhoto,
     validateDescription,
-    validateCommentTitle,
+    validateComment,
   };
 };
