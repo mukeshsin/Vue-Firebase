@@ -94,18 +94,17 @@
           </span>
         </div>
 
-        <label class="flex text-white mt-1 mb-1 text-lg">Comment</label>
+        <label class="flex text-white mt-3 mb-1 text-lg">Comment</label>
         <Field
           class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
           v-model="post.comments"
-          name="comment"
-          type="comment"
-          placeholder="Comment"
+          name="comments"
+          type="comments"
+          placeholder="comment"
           :rules="validateComment"
-          @click.prevent="handleComment"
+          @click.prevent="addComment"
         />
-        <ErrorMessage class="flex text-red-500 mt-0.5" name="comment" />
-
+        <ErrorMessage class="flex text-red-500 mt-0.5" name="comments" />
         <span v-if="isLoading">
           <i class="fa fa-spinner fa-spin text-2xl text-white mt-1"></i>
         </span>
@@ -142,6 +141,7 @@ import {
   query,
   where,
   updateDoc,
+  doc,
 } from "firebase/firestore";
 export default {
   name: "post-page",
@@ -245,27 +245,21 @@ export default {
       post.taggedUsers.splice(index, 1);
     };
 
-    //handleComment on a post
-    const handleComment = async (postId, commentTitle) => {
-      try {
-        const db = getFirestore();
-        const auth = getAuth();
-        const user = auth.currentUser;
-        const now = new Date();
-        const commentsRef = collection(db, "comments");
+    const addComment = async (post) => {
+      const db = getFirestore();
+      const postsRef = collection(db, "posts");
+      const postQuery = query(postsRef, where("uid", "==", post.uid));
+      const postSnapshot = await getDocs(postQuery);
 
-        // Create a new comment document
-        const newCommentRef = await addDoc(commentsRef, {
-          postId: postId,
-          commentTitle: commentTitle,
-          userId: user.uid,
-          createdAt: now,
-          updatedAt: now,
+      if (!postSnapshot.empty) {
+        const postDoc = postSnapshot.docs[0];
+        const postRef = doc(postsRef, postDoc.id);
+
+        await updateDoc(postRef, {
+          commentTitle: post.commentTitle,
         });
-
-        console.log("Comment added successfully with ID:", newCommentRef.id);
-      } catch (error) {
-        console.error("Error adding comment:", error);
+      } else {
+        console.log("Post not found");
       }
     };
 
@@ -291,7 +285,7 @@ export default {
             taggedUser: post.taggedUsers,
           });
 
-          const postId = newPostRef.id; // Get the generated post ID
+          const postId = newPostRef.id;
 
           // Update the post with the generated ID
           await updateDoc(newPostRef, { uid: postId });
@@ -319,7 +313,7 @@ export default {
       removeTaggedUser,
       errorMessage,
       isLoading,
-      handleComment,
+      addComment,
     };
   },
 };

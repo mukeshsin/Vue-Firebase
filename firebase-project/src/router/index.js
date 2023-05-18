@@ -41,6 +41,8 @@ const routes = [
         /* webpackChunkName: "singlePost" */ "../views/singlePostList.vue"
       ),
   },
+
+
 ];
 
 const router = createRouter({
