@@ -118,11 +118,7 @@
         </div>
       </Form>
     </div>
-    <div class="ajdustToast">
-      <successToast v-if="isSubmitted">
-        <template v-slot:postContent>Added Post Successfully</template>
-      </successToast>
-    </div>
+   
   </div>
 </template>
 <script>
@@ -130,8 +126,8 @@ import { Form, Field, ErrorMessage } from "vee-validate";
 import { validationErr } from "../composables/validation.js";
 import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
-import successToast from "../components/successToast.vue";
-import { uploadPostPhoto } from "../composables/storage.js";
+
+import { uploadPostPhoto } from "../composables/firebase-storage.js";
 import { useRouter } from "vue-router";
 import {
   getFirestore,
@@ -149,7 +145,7 @@ export default {
     Form,
     Field,
     ErrorMessage,
-    successToast,
+
   },
   setup() {
     const post = reactive({

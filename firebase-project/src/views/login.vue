@@ -66,11 +66,7 @@
         </div>
       </Form>
     </div>
-    <div class="ajdustToast">
-      <successToast v-if="isSubmitted">
-        <template v-slot:loginContent>Login Successfully</template>
-      </successToast>
-    </div>
+    
   </div>
 </template>
 
@@ -80,7 +76,7 @@ import { ref, reactive } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { validationErr } from "../composables/validation.js";
-import successToast from "../components/successToast.vue";
+
 import {
   GoogleAuthProvider,
   FacebookAuthProvider,
@@ -93,7 +89,7 @@ export default {
     Form,
     Field,
     ErrorMessage,
-    successToast,
+
   },
   setup() {
     const user = reactive({

@@ -101,11 +101,7 @@
         </div>
       </Form>
     </div>
-    <div class="ajdustToast">
-      <successToast v-if="isSubmitted">
-        <template v-slot:content>You have successfully registered</template>
-      </successToast>
-    </div>
+
   </div>
 </template>
 
@@ -115,7 +111,7 @@ import { reactive, ref, computed } from "vue";
 import { useStore } from "vuex";
 import { useRouter } from "vue-router";
 import { validationErr } from "../composables/validation.js";
-import successToast from "../components/successToast.vue";
+
 import { getAuth, updateProfile } from "firebase/auth";
 
 export default {
@@ -124,7 +120,7 @@ export default {
     Form,
     Field,
     ErrorMessage,
-    successToast,
+
   },
   setup() {
     const user = reactive({
