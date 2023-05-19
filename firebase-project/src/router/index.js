@@ -18,13 +18,30 @@ const routes = [
     component: () =>
       import(/* webpackChunkName: "loginPage" */ "../views/login.vue"),
   },
-  
+
   {
     path: "/post",
     name: "post-page",
     component: () =>
       import(/* webpackChunkName: "postPage" */ "../views/post.vue"),
   },
+
+  {
+    path: "/postList",
+    name: "post-list",
+    component: () =>
+      import(/* webpackChunkName: "postListPage" */ "../views/postList.vue"),
+  },
+
+  {
+    path: "/post/:uid",
+    name: "single-post",
+    component: () =>
+      import(
+        /* webpackChunkName: "singlePost" */ "../views/singlePostList.vue"
+      ),
+  },
+
 
 ];
 

@@ -79,15 +79,14 @@ export const validationErr = () => {
     return true;
   };
 
-
   const validatePasswordLogin = (value) => {
     // if the field is empty
     if (!value) {
       return "This field is required";
     }
     // if the field is required a valid password
-    if(value.length < 3){
-      return "Require valid password"
+    if (value.length < 3) {
+      return "Require valid password";
     }
     // All is good
     return true;
@@ -95,9 +94,9 @@ export const validationErr = () => {
 
   // validate for post page
 
-  const validateTitle =(value)=>{
-     // if the field is empty
-     if (!value) {
+  const validateTitle = (value) => {
+    // if the field is empty
+    if (!value) {
       return "This field is required";
     }
     // if firstName is less than 4 characters
@@ -106,8 +105,7 @@ export const validationErr = () => {
     }
     // All is good
     return true;
-
-  }
+  };
 
   const validatePhoto = (file) => {
     if (!file) {
@@ -119,20 +117,25 @@ export const validationErr = () => {
     return true;
   };
 
-
-
   const validateDescription = (value) => {
+    console.log("value", value);
     if (!value) {
       return "This field is required";
     }
-    const wordCount = value.split(" ").length;
-    if (wordCount < 5) {
-      return "The description should be at least 2 words long";
+    if (value.length < 20) {
+      return "The description should be at least 20 characters long";
     }
     return true;
   };
-  
 
+  const validateComment = (value) => {
+    if (!value) {
+      return "Comment title is required.";
+    } else if (value.length < 5) {
+      return "Comment title must be at least 5 characters long.";
+    }
+    return true;
+  };
 
   return {
     validationErr,
@@ -146,5 +149,6 @@ export const validationErr = () => {
     validateTitle,
     validatePhoto,
     validateDescription,
+    validateComment,
   };
 };

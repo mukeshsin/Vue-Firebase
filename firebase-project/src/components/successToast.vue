@@ -4,6 +4,7 @@
       <slot name="content"></slot>
       <slot name="loginContent"></slot>
        <slot name="postContent"></slot>
+     
     </div>
   </div>
 </template>
