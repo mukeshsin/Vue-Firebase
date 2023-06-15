@@ -90,7 +90,11 @@ export default {
 
     const getAllPosts = async () => {
       isLoading.value = true;
-      const postData = query(postsRef, orderBy("createdAt", "desc"), limit(batchSize));
+      const postData = query(
+        postsRef,
+        orderBy("createdAt", "desc"),
+        limit(batchSize)
+      );
       const querySnapshot = await getDocs(postData);
       posts.value = querySnapshot.docs.map((doc) => ({
         id: doc.id,

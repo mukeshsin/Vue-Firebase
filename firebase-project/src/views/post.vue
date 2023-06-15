@@ -94,16 +94,26 @@
           </span>
         </div>
 
-        <label class="flex text-white mt-3 mb-1 text-lg">Comment</label>
-        <Field
-          class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
-          v-model="post.comments"
-          name="comments"
-          type="comments"
-          placeholder="comment"
-          :rules="validateComment"
-          @click.prevent="addComment"
-        />
+        <div class="relative">
+          <label class="flex text-white mt-3 mb-1 text-lg">Comment</label>
+          <Field
+            class="w-11/12 mr-8 border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
+            v-model="post.commentTitle"
+            name="comments"
+            type="comments"
+            placeholder="comment"
+            :rules="validateComment"
+            @click.prevent="addComment"
+          />
+          <span
+            ><i class="absolute fas fa-edit text-white text-2xl mt-2 ml-1"></i
+          ></span>
+          <span
+            ><i
+              class="flex absolute fa-solid fa-trash-can text-white text-2xl ml-8 mt-2"
+            ></i
+          ></span>
+        </div>
         <ErrorMessage class="flex text-red-500 mt-0.5" name="comments" />
         <span v-if="isLoading">
           <i class="fa fa-spinner fa-spin text-2xl text-white mt-1"></i>
@@ -118,7 +128,7 @@
         </div>
       </Form>
     </div>
-   <div class="ajdustToast">
+    <div class="ajdustToast">
       <successToast v-if="isSubmitted">
         <template v-slot:postContent>Create Post Successfully</template>
       </successToast>
@@ -130,7 +140,7 @@ import { Form, Field, ErrorMessage } from "vee-validate";
 import { validationErr } from "../composables/validation.js";
 import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
-import successToast from "../components/successToast.vue"
+import successToast from "../components/successToast.vue";
 import { uploadPostPhoto } from "../composables/firebase-storage.js";
 import { useRouter } from "vue-router";
 import {
@@ -141,7 +151,6 @@ import {
   query,
   where,
   updateDoc,
-  doc,
 } from "firebase/firestore";
 export default {
   name: "post-page",
@@ -149,7 +158,7 @@ export default {
     Form,
     Field,
     ErrorMessage,
-    successToast
+    successToast,
   },
   setup() {
     const post = reactive({
@@ -160,8 +169,9 @@ export default {
       taggedUsers: [],
       searchedUsers: [],
       users: [],
-      comments: [],
+      commentTitle: "",
     });
+
     const errorMessage = ref(null);
     const showList = ref(false);
     const error = ref(null);
@@ -245,24 +255,6 @@ export default {
       post.taggedUsers.splice(index, 1);
     };
 
-    const addComment = async (post) => {
-      const db = getFirestore();
-      const postsRef = collection(db, "posts");
-      const postQuery = query(postsRef, where("uid", "==", post.uid));
-      const postSnapshot = await getDocs(postQuery);
-
-      if (!postSnapshot.empty) {
-        const postDoc = postSnapshot.docs[0];
-        const postRef = doc(postsRef, postDoc.id);
-
-        await updateDoc(postRef, {
-          commentTitle: post.commentTitle,
-        });
-      } else {
-        console.log("Post not found");
-      }
-    };
-
     const handlePost = async () => {
       try {
         (isLoading.value = true), console.log("post", post);
@@ -283,6 +275,14 @@ export default {
             updatedAt: now,
             updatedBy: user.uid,
             taggedUser: post.taggedUsers,
+            comments: [
+              {
+                commentTitle: post.commentTitle,
+                updatedAt: now,
+                userId: user.uid,
+                createdAt:now
+              },
+            ],
           });
 
           const postId = newPostRef.id;
@@ -300,6 +300,8 @@ export default {
       }
     };
 
+   
+
     return {
       ...validationErr(),
       post,
@@ -313,7 +315,6 @@ export default {
       removeTaggedUser,
       errorMessage,
       isLoading,
-      addComment,
     };
   },
 };
