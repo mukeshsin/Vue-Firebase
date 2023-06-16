@@ -8,7 +8,17 @@
     </div>
 
     <div class="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <h1 class="text-4xl font-bold text-grey-500 mb-4 font-sans">POSTS</h1>
+      <div>
+        <button
+          v-if="showCreateButton"
+          @click="goBackPost"
+          class="ml-4 text-grey text-3xl font-bold py-1 px-3 rounded"
+        >
+          <i class="fa-solid fa-left-long text-md mr-1 rounded"></i>
+        </button>
+      </div>
+      <h1 class="text-4xl font-bold text-grey-500 mb-3 mt-0 font-sans">POSTS</h1>
+
       <ul
         class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3"
       >
@@ -32,11 +42,17 @@
               {{ post.description }}
             </p>
 
-            <p v-if="post.taggedUser" class="mt-2 text-xs text-gray-700">
+            <p
+              v-if="post.taggedUser && post.taggedUser.length"
+              class="mt-2 text-xs text-gray-700"
+            >
               <span class="text-gray-600 font-semibold">Tagged User:</span>
-              <span class="text-gray-800 leading-normal">{{
-                post.taggedUser
-              }}</span>
+              <span
+                class="text-gray-800 leading-normal block"
+                v-for="user in post.taggedUser"
+                :key="user.email"
+                >{{ user.email }}</span
+              >
             </p>
             <p v-else class="mt-2 text-sm text-gray-700 tracking-wide" disabled>
               Tagged User: N/A
@@ -126,7 +142,7 @@ export default {
     };
 
     const showPostDetail = (key) => {
-      router.push(`/single-post/${key}`);
+      router.push(`/post/${key}`);
     };
 
     const showLoadMoreButton = computed(() => {
@@ -135,12 +151,22 @@ export default {
 
     getAllPosts();
 
+    const goBackPost = () => {
+      router.push("/post");
+    };
+
+    const showCreateButton = computed(() => {
+      return lastVisiblePost.value !== null;
+    });
+
     return {
       posts,
       loadMorePosts,
       showLoadMoreButton,
+      showCreateButton,
       isLoading,
       showPostDetail,
+      goBackPost,
     };
   },
 };

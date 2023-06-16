@@ -93,8 +93,14 @@
             ></i>
           </span>
         </div>
+        <div
+          v-if="taggedErrorMessage"
+          class="flex items-center justify-between px-2 mt-1 bg-red-100 text-red-700"
+        >
+          {{ taggedErrorMessage }}
+        </div>
 
-        <div class="relative">
+        <!-- <div class="relative">
           <label class="flex text-white mt-3 mb-1 text-lg">Comment</label>
           <Field
             class="w-11/12 mr-8 border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
@@ -114,7 +120,7 @@
             ></i
           ></span>
         </div>
-        <ErrorMessage class="flex text-red-500 mt-0.5" name="comments" />
+        <ErrorMessage class="flex text-red-500 mt-0.5" name="comments" /> -->
         <span v-if="isLoading">
           <i class="fa fa-spinner fa-spin text-2xl text-white mt-1"></i>
         </span>
@@ -169,10 +175,11 @@ export default {
       taggedUsers: [],
       searchedUsers: [],
       users: [],
-      commentTitle: "",
+      // commentTitle: "",
     });
 
     const errorMessage = ref(null);
+    const taggedErrorMessage = ref(null);
     const showList = ref(false);
     const error = ref(null);
     const isSubmitted = ref(false);
@@ -238,8 +245,9 @@ export default {
         if (uid) {
           if (!post.taggedUsers.includes(uid)) {
             post.taggedUsers.push(uid);
+            taggedErrorMessage.value = "";
           } else {
-            errorMessage.value = "User already tagged";
+            taggedErrorMessage.value = "User already tagged";
             return;
           }
 
@@ -275,14 +283,14 @@ export default {
             updatedAt: now,
             updatedBy: user.uid,
             taggedUser: post.taggedUsers,
-            comments: [
-              {
-                commentTitle: post.commentTitle,
-                updatedAt: now,
-                userId: user.uid,
-                createdAt:now
-              },
-            ],
+            // comments: [
+            //   {
+            //     commentTitle: post.commentTitle,
+            //     updatedAt: now,
+            //     userId: user.uid,
+            //     createdAt: now,
+            //   },
+            // ],
           });
 
           const postId = newPostRef.id;
@@ -300,8 +308,6 @@ export default {
       }
     };
 
-   
-
     return {
       ...validationErr(),
       post,
@@ -314,6 +320,7 @@ export default {
       searchTaggedUsers,
       removeTaggedUser,
       errorMessage,
+      taggedErrorMessage,
       isLoading,
     };
   },
