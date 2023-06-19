@@ -66,7 +66,7 @@ export default {
     const getSinglePost = async () => {
       try {
         isLoading.value = true;
-        const postId = route.params.uid;
+        const postId = route.params.id;
         if (!postId) {
           throw new Error("Missing required param 'uid'");
         }

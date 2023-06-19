@@ -79,6 +79,12 @@
             {{ user.firstName }}
           </li>
         </ul>
+        <div
+          v-if="taggedErrorMessage"
+          class="flex items-center justify-between px-2 mt-1 bg-red-100 text-red-700"
+        >
+          {{ taggedErrorMessage }}
+        </div>
 
         <div class="flex flex-wrap mt-3">
           <span
@@ -93,34 +99,7 @@
             ></i>
           </span>
         </div>
-        <div
-          v-if="taggedErrorMessage"
-          class="flex items-center justify-between px-2 mt-1 bg-red-100 text-red-700"
-        >
-          {{ taggedErrorMessage }}
-        </div>
 
-        <!-- <div class="relative">
-          <label class="flex text-white mt-3 mb-1 text-lg">Comment</label>
-          <Field
-            class="w-11/12 mr-8 border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
-            v-model="post.commentTitle"
-            name="comments"
-            type="comments"
-            placeholder="comment"
-            :rules="validateComment"
-            @click.prevent="addComment"
-          />
-          <span
-            ><i class="absolute fas fa-edit text-white text-2xl mt-2 ml-1"></i
-          ></span>
-          <span
-            ><i
-              class="flex absolute fa-solid fa-trash-can text-white text-2xl ml-8 mt-2"
-            ></i
-          ></span>
-        </div>
-        <ErrorMessage class="flex text-red-500 mt-0.5" name="comments" /> -->
         <span v-if="isLoading">
           <i class="fa fa-spinner fa-spin text-2xl text-white mt-1"></i>
         </span>
@@ -175,7 +154,6 @@ export default {
       taggedUsers: [],
       searchedUsers: [],
       users: [],
-      // commentTitle: "",
     });
 
     const errorMessage = ref(null);
@@ -243,17 +221,22 @@ export default {
     const addTaggedUser = async (uid) => {
       try {
         if (uid) {
-          if (!post.taggedUsers.includes(uid)) {
-            post.taggedUsers.push(uid);
+          const isUserAlreadyTagged = post.taggedUsers.some(
+            (user) => user === uid
+          );
+            if (!isUserAlreadyTagged) {
+        
             taggedErrorMessage.value = "";
+            post.taggedUsers.push(uid);
+            console.log(post.taggedUsers);
           } else {
             taggedErrorMessage.value = "User already tagged";
             return;
           }
-
-          post.taggedUser = "";
-          showList.value = false;
         }
+
+        post.taggedUser = "";
+        showList.value = false;
       } catch (error) {
         console.error(error);
       }
@@ -283,14 +266,6 @@ export default {
             updatedAt: now,
             updatedBy: user.uid,
             taggedUser: post.taggedUsers,
-            // comments: [
-            //   {
-            //     commentTitle: post.commentTitle,
-            //     updatedAt: now,
-            //     userId: user.uid,
-            //     createdAt: now,
-            //   },
-            // ],
           });
 
           const postId = newPostRef.id;

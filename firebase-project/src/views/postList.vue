@@ -8,16 +8,18 @@
     </div>
 
     <div class="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <div>
+      <div class="flex justify-end">
         <button
           v-if="showCreateButton"
           @click="goBackPost"
-          class="ml-4 text-grey text-3xl font-bold py-1 px-3 rounded"
+          class="ml-4 bg-blue-500 hover:bg-blue-700 text-white text-md font-bold py-1 px-2 rounded"
         >
-          <i class="fa-solid fa-left-long text-md mr-1 rounded"></i>
+          Create Post
         </button>
       </div>
-      <h1 class="text-4xl font-bold text-grey-500 mb-3 mt-0 font-sans">POSTS</h1>
+      <h1 class="text-4xl font-bold text-grey-500 mb-3 mt-0 font-sans">
+        POSTS
+      </h1>
 
       <ul
         class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3"
@@ -59,11 +61,53 @@
             </p>
             <button
               v-if="posts.length > 0"
-              @click="showPostDetail(post.uid)"
+              @click="showPostDetail(post.id)"
               class="mt-3 bg-blue-500 hover:bg-blue-700 text-white font-bold text-xs py-1 px-1 rounded"
             >
               View Details <i class="fa-solid fa-arrow-right"></i>
             </button>
+          </div>
+          <div class="bg-grey-500">
+            <i
+              class="fa-sharp fa-solid fa-comment text-blue-500 text-lg mr-8"
+              @click="handleAddComment(post.id)"
+            ></i>
+          </div>
+          <div class="w-96 ml-10 mt-2 mb-2 flex" v-if="showInput === post.id">
+            <input
+              class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg border-2"
+              name="comment"
+              type="text"
+              placeholder="Comment"
+              v-model="comment.commentTitle"
+            />
+            <button
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded mr-4 ml-2"
+              @click="submitComment"
+            >
+              Submit
+            </button>
+          </div>
+          <div>
+            <ul class="mt-2">
+              <li v-for="comment in post.comments" :key="comment.id">
+                <p class="text-sm text-gray-600">
+                  {{ comment.commentTitle }}
+                  <span class="ml-2">
+                    <i
+                      class="fas fa-edit text-blue-500 cursor-pointer"
+                      @click="editComment(comment.id)"
+                    ></i>
+                  </span>
+                  <span class="ml-2">
+                    <i
+                      class="fas fa-trash text-red-500 cursor-pointer"
+                      @click="deleteComment(post.id, comment.id)"
+                    ></i>
+                  </span>
+                </p>
+              </li>
+            </ul>
           </div>
         </li>
       </ul>
@@ -83,13 +127,16 @@
 import {
   collection,
   getDocs,
+  getDoc,
   getFirestore,
+  updateDoc,
   query,
   orderBy,
+  doc,
   limit,
   startAfter,
 } from "firebase/firestore";
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, reactive } from "vue";
 import { useRouter } from "vue-router";
 
 export default {
@@ -100,6 +147,12 @@ export default {
     const batchSize = 5; // Number of posts to load per batch
     const lastVisiblePost = ref(null);
     const isLoading = ref(false);
+    const showInput = ref(false);
+    const now = new Date();
+    const comment = reactive({
+      commentTitle: "",
+      createdAt: now,
+    });
 
     const db = getFirestore();
     const postsRef = collection(db, "posts");
@@ -140,6 +193,9 @@ export default {
       }
       isLoading.value = false;
     };
+    onMounted(() => {
+      console.log(posts.value);
+    });
 
     const showPostDetail = (key) => {
       router.push(`/post/${key}`);
@@ -159,6 +215,60 @@ export default {
       return lastVisiblePost.value !== null;
     });
 
+    const handleAddComment = (postId) => {
+      showInput.value = postId;
+    };
+
+    const submitComment = async () => {
+      const db = getFirestore();
+      const postRef = doc(db, "posts", showInput.value);
+
+      try {
+        const commentData = {
+          commentTitle: comment.commentTitle,
+          createdAt: comment.createdAt,
+        };
+
+        const postSnap = await getDoc(postRef);
+        const postData = postSnap.data();
+        const comments = postData.comments || [];
+
+        comments.push(commentData);
+
+        await updateDoc(postRef, {
+          comments: comments,
+        });
+
+        comment.commentTitle = "";
+
+        // Hide the comment input field
+        showInput.value = false;
+      } catch (error) {
+        console.error("Error adding comment:", error);
+      }
+    };
+
+    const deleteComment = async (postId, commentId) => {
+      try {
+        const postRef = doc(db, "posts", postId);
+        const postSnap = await getDoc(postRef);
+        const postData = postSnap.data();
+        const comments = postData.comments || [];
+
+        // Filter out the deleted comment from the local array
+        const updatedComments = comments.filter(
+          (comment) => comment.id !== commentId
+        );
+
+        // Update the comments in Firestore
+        await updateDoc(postRef, {
+          comments: updatedComments,
+        });
+      } catch (error) {
+        console.error("Error deleting comment:", error);
+      }
+    };
+
     return {
       posts,
       loadMorePosts,
@@ -167,6 +277,11 @@ export default {
       isLoading,
       showPostDetail,
       goBackPost,
+      handleAddComment,
+      showInput,
+      submitComment,
+      comment,
+      deleteComment,
     };
   },
 };

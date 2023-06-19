@@ -35,11 +35,12 @@ const routes = [
   },
 
   {
-    path: "/post/:uid",
+    path: "/post/:id",
     name: "single-post",
     component: singlePost,
   },
 
+ 
 ];
 
 const router = createRouter({
