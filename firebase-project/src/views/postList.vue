@@ -7,7 +7,7 @@
       <i class="fa fa-spinner fa-spin text-4xl text-grey-500"></i>
     </div>
 
-    <div class="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-full mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div class="flex justify-end">
         <button
           v-if="showCreateButton"
@@ -32,7 +32,8 @@
           <img
             class="h-48 w-full mx-auto object-cover"
             :src="post.photo"
-            alt=""
+            alt="postimage"
+            @click="showPostDetail(post.id)"
           />
           <div class="p-4">
             <h2
@@ -59,53 +60,72 @@
             <p v-else class="mt-2 text-sm text-gray-700 tracking-wide" disabled>
               Tagged User: N/A
             </p>
-            <button
-              v-if="posts.length > 0"
-              @click="showPostDetail(post.id)"
-              class="mt-3 bg-blue-500 hover:bg-blue-700 text-white font-bold text-xs py-1 px-1 rounded"
-            >
-              View Details <i class="fa-solid fa-arrow-right"></i>
-            </button>
           </div>
           <div class="bg-grey-500">
             <i
-              class="fa-sharp fa-solid fa-comment text-blue-500 text-lg mr-8"
+              class="fa-sharp fa-solid fa-comment text-blue-500 text-lg mr-8 p-2"
               @click="handleAddComment(post.id)"
             ></i>
           </div>
-          <div class="w-96 ml-10 mt-2 mb-2 flex" v-if="showInput === post.id">
+          <div class="w-96 mt-2 mb-2 flex" v-if="showInput === post.id">
             <input
-              class="w-full border-solid outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg border-2"
+              class="w-48 h-8 ml-4 border-solid border-slate-950 outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg border-2 md:ml-10 lg:ml-5 xl:w-72 xl:ml-20"
               name="comment"
               type="text"
-              placeholder="Comment"
+              placeholder="Add/Update Comment"
               v-model="comment.commentTitle"
             />
             <button
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-2 rounded mr-4 ml-2"
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mr-4 ml-2 h-8"
               @click="submitComment"
             >
               Submit
             </button>
           </div>
+
           <div>
             <ul class="mt-2">
               <li v-for="comment in post.comments" :key="comment.id">
-                <p class="text-sm text-gray-600">
-                  {{ comment.commentTitle }}
-                  <span class="ml-2">
-                    <i
-                      class="fas fa-edit text-blue-500 cursor-pointer"
-                      @click="editComment(comment.id)"
-                    ></i>
-                  </span>
-                  <span class="ml-2">
-                    <i
-                      class="fas fa-trash text-red-500 cursor-pointer"
-                      @click="deleteComment(post.id, comment.id)"
-                    ></i>
-                  </span>
-                </p>
+                <div v-if="!comment.isEditing">
+                  <p
+                    class="text-sm text-gray-600 border-2 border-slate-950 w-64 ml-4 mb-2 p-1 md:ml-10 lg:ml-5 xl:ml-24"
+                  >
+                    {{ comment.commentTitle }}
+                    <span class="ml-2">
+                      <i
+                        class="fas fa-edit text-blue-500 cursor-pointer"
+                        @click="editCommentInput(comment)"
+                      ></i>
+                    </span>
+                    <span class="ml-2">
+                      <i
+                        class="fas fa-trash text-red-500 cursor-pointer"
+                        @click="deleteComment(post.id, comment.id)"
+                      ></i>
+                    </span>
+                  </p>
+                </div>
+                <div v-else>
+                  <div class="flex flex-col items-center sm:flex-row md:flex-col">
+                    <input
+                      class="w-48 h-8  mb-1 border-solid border-slate-950 outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg border-2  xl:w-72 "
+                      :value="comment.commentTitle"
+                      @input="updateCommentInput(comment, $event.target.value)"
+                    />
+                    <button
+                      class="bg-blue-500  hover:bg-blue-700 text-white font-bold py-1 px-2 rounded   h-8 w-32 mb-1  "
+                      @click="saveComment(post.id, comment)"
+                    >
+                      Save
+                    </button>
+                    <button
+                      class="bg-red-500 hover:bg-red-700 text-white font-bold  mb-2 py-1 px-2 rounded h-8  w-32  "
+                      @click="cancelEditComment(comment)"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </li>
             </ul>
           </div>
@@ -138,6 +158,7 @@ import {
 } from "firebase/firestore";
 import { ref, computed, onMounted, reactive } from "vue";
 import { useRouter } from "vue-router";
+import { getAuth } from "firebase/auth";
 
 export default {
   name: "post-list",
@@ -149,9 +170,13 @@ export default {
     const isLoading = ref(false);
     const showInput = ref(false);
     const now = new Date();
+    const auth = getAuth();
+    const user = auth.currentUser;
     const comment = reactive({
       commentTitle: "",
+      userId: user ? user.uid : null,
       createdAt: now,
+      updatedAt: now,
     });
 
     const db = getFirestore();
@@ -192,6 +217,7 @@ export default {
           querySnapshot.docs[querySnapshot.docs.length - 1];
       }
       isLoading.value = false;
+      // Console log the post.comments data
     };
     onMounted(() => {
       console.log(posts.value);
@@ -226,7 +252,9 @@ export default {
       try {
         const commentData = {
           commentTitle: comment.commentTitle,
+          userId: comment.userId,
           createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
         };
 
         const postSnap = await getDoc(postRef);
@@ -255,17 +283,58 @@ export default {
         const postData = postSnap.data();
         const comments = postData.comments || [];
 
-        // Filter out the deleted comment from the local array
-        const updatedComments = comments.filter(
-          (comment) => comment.id !== commentId
+        const commentIndex = comments.findIndex(
+          (comment) => comment.id === commentId
         );
 
-        // Update the comments in Firestore
-        await updateDoc(postRef, {
-          comments: updatedComments,
-        });
+        if (commentIndex !== -1) {
+          comments.splice(commentIndex, 1);
+
+          // Update the comments in Firestore
+          await updateDoc(postRef, {
+            comments: comments,
+          });
+        }
       } catch (error) {
         console.error("Error deleting comment:", error);
+      }
+    };
+
+    const editCommentInput = (comment) => {
+      comment.isEditing = true;
+      comment.originalCommentTitle = comment.commentTitle;
+    };
+
+    const updateCommentInput = (comment, value) => {
+      comment.commentTitle = value;
+    };
+
+    const cancelEditComment = (comment) => {
+      comment.isEditing = false;
+      comment.commentTitle = comment.originalCommentTitle;
+    };
+
+    const saveComment = async (postId, comment) => {
+      try {
+        const postRef = doc(db, "posts", postId);
+        const postSnap = await getDoc(postRef);
+        const postData = postSnap.data();
+        const comments = postData.comments || [];
+
+        const commentIndex = comments.findIndex((c) => c.id === comment.id);
+
+        if (commentIndex !== -1) {
+          comments[commentIndex].commentTitle = comment.commentTitle;
+
+          // Update the comments in Firestore
+          await updateDoc(postRef, {
+            comments: comments,
+          });
+
+          comment.isEditing = false;
+        }
+      } catch (error) {
+        console.error("Error updating comment:", error);
       }
     };
 
@@ -282,6 +351,10 @@ export default {
       submitComment,
       comment,
       deleteComment,
+      editCommentInput,
+      updateCommentInput,
+      cancelEditComment,
+      saveComment,
     };
   },
 };
