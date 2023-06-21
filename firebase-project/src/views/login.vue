@@ -117,7 +117,7 @@ export default {
         });
         isSubmitted.value = true;
         isLoading.value = false;
-        router.push("/post");
+        router.push("/postList");
       } catch (err) {
         console.log(err);
         error.value = err.message;

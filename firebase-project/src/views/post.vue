@@ -79,6 +79,12 @@
             {{ user.firstName }}
           </li>
         </ul>
+        <div
+          v-if="taggedErrorMessage"
+          class="flex items-center justify-between px-2 mt-1 bg-red-100 text-red-700"
+        >
+          {{ taggedErrorMessage }}
+        </div>
 
         <div class="flex flex-wrap mt-3">
           <span
@@ -94,17 +100,6 @@
           </span>
         </div>
 
-        <label class="flex text-white mt-3 mb-1 text-lg">Comment</label>
-        <Field
-          class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
-          v-model="post.comments"
-          name="comments"
-          type="comments"
-          placeholder="comment"
-          :rules="validateComment"
-          @click.prevent="addComment"
-        />
-        <ErrorMessage class="flex text-red-500 mt-0.5" name="comments" />
         <span v-if="isLoading">
           <i class="fa fa-spinner fa-spin text-2xl text-white mt-1"></i>
         </span>
@@ -118,7 +113,7 @@
         </div>
       </Form>
     </div>
-   <div class="ajdustToast">
+    <div class="ajdustToast">
       <successToast v-if="isSubmitted">
         <template v-slot:postContent>Create Post Successfully</template>
       </successToast>
@@ -130,7 +125,7 @@ import { Form, Field, ErrorMessage } from "vee-validate";
 import { validationErr } from "../composables/validation.js";
 import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
-import successToast from "../components/successToast.vue"
+import successToast from "../components/successToast.vue";
 import { uploadPostPhoto } from "../composables/firebase-storage.js";
 import { useRouter } from "vue-router";
 import {
@@ -141,7 +136,6 @@ import {
   query,
   where,
   updateDoc,
-  doc,
 } from "firebase/firestore";
 export default {
   name: "post-page",
@@ -149,7 +143,7 @@ export default {
     Form,
     Field,
     ErrorMessage,
-    successToast
+    successToast,
   },
   setup() {
     const post = reactive({
@@ -160,9 +154,10 @@ export default {
       taggedUsers: [],
       searchedUsers: [],
       users: [],
-      comments: [],
     });
+
     const errorMessage = ref(null);
+    const taggedErrorMessage = ref(null);
     const showList = ref(false);
     const error = ref(null);
     const isSubmitted = ref(false);
@@ -226,16 +221,22 @@ export default {
     const addTaggedUser = async (uid) => {
       try {
         if (uid) {
-          if (!post.taggedUsers.includes(uid)) {
+          const isUserAlreadyTagged = post.taggedUsers.some(
+            (user) => user === uid
+          );
+            if (!isUserAlreadyTagged) {
+        
+            taggedErrorMessage.value = "";
             post.taggedUsers.push(uid);
+            console.log(post.taggedUsers);
           } else {
-            errorMessage.value = "User already tagged";
+            taggedErrorMessage.value = "User already tagged";
             return;
           }
-
-          post.taggedUser = "";
-          showList.value = false;
         }
+
+        post.taggedUser = "";
+        showList.value = false;
       } catch (error) {
         console.error(error);
       }
@@ -243,24 +244,6 @@ export default {
 
     const removeTaggedUser = (index) => {
       post.taggedUsers.splice(index, 1);
-    };
-
-    const addComment = async (post) => {
-      const db = getFirestore();
-      const postsRef = collection(db, "posts");
-      const postQuery = query(postsRef, where("uid", "==", post.uid));
-      const postSnapshot = await getDocs(postQuery);
-
-      if (!postSnapshot.empty) {
-        const postDoc = postSnapshot.docs[0];
-        const postRef = doc(postsRef, postDoc.id);
-
-        await updateDoc(postRef, {
-          commentTitle: post.commentTitle,
-        });
-      } else {
-        console.log("Post not found");
-      }
     };
 
     const handlePost = async () => {
@@ -312,8 +295,8 @@ export default {
       searchTaggedUsers,
       removeTaggedUser,
       errorMessage,
+      taggedErrorMessage,
       isLoading,
-      addComment,
     };
   },
 };

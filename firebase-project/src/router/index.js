@@ -1,4 +1,5 @@
 import { createRouter, createWebHashHistory } from "vue-router";
+import singlePost from '../views/singlePostList.vue'
 
 const routes = [
   {
@@ -34,15 +35,12 @@ const routes = [
   },
 
   {
-    path: "/post/:uid",
+    path: "/post/:id",
     name: "single-post",
-    component: () =>
-      import(
-        /* webpackChunkName: "singlePost" */ "../views/singlePostList.vue"
-      ),
+    component: singlePost,
   },
 
-
+ 
 ];
 
 const router = createRouter({
