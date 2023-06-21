@@ -10,7 +10,7 @@
     <div class="max-w-full mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div class="flex justify-end">
         <button
-          v-if="showCreateButton"
+          v-if="showCreatePostButton"
           @click="goBackPost"
           class="ml-4 bg-blue-500 hover:bg-blue-700 text-white text-md font-bold py-1 px-2 rounded"
         >
@@ -77,7 +77,7 @@
             />
             <button
               class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mr-4 ml-2 h-8"
-              @click="submitComment"
+              @click="submitComment(post.id)"
             >
               Submit
             </button>
@@ -106,20 +106,22 @@
                   </p>
                 </div>
                 <div v-else>
-                  <div class="flex flex-col items-center sm:flex-row md:flex-col">
+                  <div
+                    class="flex flex-col items-center sm:flex-row md:flex-col"
+                  >
                     <input
-                      class="w-48 h-8  mb-1 border-solid border-slate-950 outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg border-2  xl:w-72 "
+                      class="w-48 h-8 mb-1 border-solid border-slate-950 outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg border-2 xl:w-72"
                       :value="comment.commentTitle"
                       @input="updateCommentInput(comment, $event.target.value)"
                     />
                     <button
-                      class="bg-blue-500  hover:bg-blue-700 text-white font-bold py-1 px-2 rounded   h-8 w-32 mb-1  "
+                      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded h-8 w-32 mb-1"
                       @click="saveComment(post.id, comment)"
                     >
                       Save
                     </button>
                     <button
-                      class="bg-red-500 hover:bg-red-700 text-white font-bold  mb-2 py-1 px-2 rounded h-8  w-32  "
+                      class="bg-red-500 hover:bg-red-700 text-white font-bold mb-2 py-1 px-2 rounded h-8 w-32"
                       @click="cancelEditComment(comment)"
                     >
                       Cancel
@@ -147,36 +149,27 @@
 import {
   collection,
   getDocs,
-  getDoc,
   getFirestore,
-  updateDoc,
   query,
   orderBy,
-  doc,
   limit,
   startAfter,
 } from "firebase/firestore";
-import { ref, computed, onMounted, reactive } from "vue";
+import { ref, computed, reactive } from "vue";
 import { useRouter } from "vue-router";
-import { getAuth } from "firebase/auth";
+import { functions } from "../composables/commentApi";
 
 export default {
   name: "post-list",
+
   setup() {
     const router = useRouter();
     const posts = ref([]);
-    const batchSize = 5; // Number of posts to load per batch
+    const batchSize = 5;
     const lastVisiblePost = ref(null);
     const isLoading = ref(false);
-    const showInput = ref(false);
-    const now = new Date();
-    const auth = getAuth();
-    const user = auth.currentUser;
     const comment = reactive({
       commentTitle: "",
-      userId: user ? user.uid : null,
-      createdAt: now,
-      updatedAt: now,
     });
 
     const db = getFirestore();
@@ -217,14 +210,10 @@ export default {
           querySnapshot.docs[querySnapshot.docs.length - 1];
       }
       isLoading.value = false;
-      // Console log the post.comments data
     };
-    onMounted(() => {
-      console.log(posts.value);
-    });
 
-    const showPostDetail = (key) => {
-      router.push(`/post/${key}`);
+    const showPostDetail = (id) => {
+      router.push(`/post/${id}`);
     };
 
     const showLoadMoreButton = computed(() => {
@@ -234,127 +223,23 @@ export default {
     getAllPosts();
 
     const goBackPost = () => {
-      router.push("/post");
+      router.push("/create-post");
     };
 
-    const showCreateButton = computed(() => {
+    const showCreatePostButton = computed(() => {
       return lastVisiblePost.value !== null;
     });
-
-    const handleAddComment = (postId) => {
-      showInput.value = postId;
-    };
-
-    const submitComment = async () => {
-      const db = getFirestore();
-      const postRef = doc(db, "posts", showInput.value);
-
-      try {
-        const commentData = {
-          commentTitle: comment.commentTitle,
-          userId: comment.userId,
-          createdAt: comment.createdAt,
-          updatedAt: comment.updatedAt,
-        };
-
-        const postSnap = await getDoc(postRef);
-        const postData = postSnap.data();
-        const comments = postData.comments || [];
-
-        comments.push(commentData);
-
-        await updateDoc(postRef, {
-          comments: comments,
-        });
-
-        comment.commentTitle = "";
-
-        // Hide the comment input field
-        showInput.value = false;
-      } catch (error) {
-        console.error("Error adding comment:", error);
-      }
-    };
-
-    const deleteComment = async (postId, commentId) => {
-      try {
-        const postRef = doc(db, "posts", postId);
-        const postSnap = await getDoc(postRef);
-        const postData = postSnap.data();
-        const comments = postData.comments || [];
-
-        const commentIndex = comments.findIndex(
-          (comment) => comment.id === commentId
-        );
-
-        if (commentIndex !== -1) {
-          comments.splice(commentIndex, 1);
-
-          // Update the comments in Firestore
-          await updateDoc(postRef, {
-            comments: comments,
-          });
-        }
-      } catch (error) {
-        console.error("Error deleting comment:", error);
-      }
-    };
-
-    const editCommentInput = (comment) => {
-      comment.isEditing = true;
-      comment.originalCommentTitle = comment.commentTitle;
-    };
-
-    const updateCommentInput = (comment, value) => {
-      comment.commentTitle = value;
-    };
-
-    const cancelEditComment = (comment) => {
-      comment.isEditing = false;
-      comment.commentTitle = comment.originalCommentTitle;
-    };
-
-    const saveComment = async (postId, comment) => {
-      try {
-        const postRef = doc(db, "posts", postId);
-        const postSnap = await getDoc(postRef);
-        const postData = postSnap.data();
-        const comments = postData.comments || [];
-
-        const commentIndex = comments.findIndex((c) => c.id === comment.id);
-
-        if (commentIndex !== -1) {
-          comments[commentIndex].commentTitle = comment.commentTitle;
-
-          // Update the comments in Firestore
-          await updateDoc(postRef, {
-            comments: comments,
-          });
-
-          comment.isEditing = false;
-        }
-      } catch (error) {
-        console.error("Error updating comment:", error);
-      }
-    };
 
     return {
       posts,
       loadMorePosts,
       showLoadMoreButton,
-      showCreateButton,
+      showCreatePostButton,
       isLoading,
       showPostDetail,
       goBackPost,
-      handleAddComment,
-      showInput,
-      submitComment,
+      ...functions(),
       comment,
-      deleteComment,
-      editCommentInput,
-      updateCommentInput,
-      cancelEditComment,
-      saveComment,
     };
   },
 };

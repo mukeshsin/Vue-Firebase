@@ -1,5 +1,13 @@
 <template>
   <div>
+    <div class="flex justify-end mr-16 text-lg">
+      <button
+        @click="cancelButton"
+        class="ml-4 bg-blue-500 hover:bg-blue-700 text-white text-md font-bold py-1 px-2 rounded"
+      >
+        cancel
+      </button>
+    </div>
     <div
       class="w-4/5 h-full mb-4 mt-5 sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
     >
@@ -26,6 +34,7 @@
           name="photo"
           type="file"
           placeholder="Photo"
+          accept="image/*"
           :rules="validatePhoto"
         />
         <ErrorMessage class="flex text-red-500 mt-0.5" name="photo" />
@@ -174,49 +183,62 @@ export default {
 
     const getUsers = async () => {
       try {
-        const db = getFirestore();
-        const usersRef = collection(db, "users");
-        const userData = query(
-          usersRef,
-          where("firstName", "==", post.taggedUser)
-        );
-        const usersSnap = await getDocs(userData);
-        const usersData = usersSnap.docs.map((doc) => doc.data());
-        post.users = usersData;
+        if (post.taggedUser.length >= 3) {
+          // Check if at least 3 letters are entered
+          const db = getFirestore();
+          const usersRef = collection(db, "users");
+          const userData = query(
+            usersRef,
+            where("firstName", "==", post.taggedUser)
+          );
+          const usersSnap = await getDocs(userData);
+          const usersData = usersSnap.docs.map((doc) => doc.data());
+          post.users = usersData;
+        } else {
+          post.users = []; // Clear the users list if the input is less than 3 letters
+        }
       } catch (error) {
         console.log(error);
       }
     };
     const searchTaggedUsers = async () => {
-      try {
-        const db = getFirestore();
-        const usersRef = collection(db, "users");
-        const userData = query(
-          usersRef,
-          where("firstName", "==", post.taggedUser)
-        );
-        const snapshot = await getDocs(userData);
+  try {
+    if (post.taggedUser.length >= 3) {
+      const db = getFirestore();
+      const usersRef = collection(db, "users");
+      const userData = query(
+        usersRef,
+        where("firstName", "==", post.taggedUser)
+      );
+      const snapshot = await getDocs(userData);
 
-        if (snapshot.empty) {
-          post.searchedUsers = [];
-          errorMessage.value = "User not found";
-        } else {
-          post.searchedUsers = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          errorMessage.value = "";
-        }
-
-        if (post.taggedUser) {
-          showList.value = true;
-        } else {
-          showList.value = false;
-        }
-      } catch (error) {
-        console.error(error);
+      if (snapshot.empty) {
+        post.searchedUsers = [];
+        errorMessage.value = "User not found";
+      } else {
+        post.searchedUsers = snapshot.docs
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+          .filter(
+            (user) =>
+              user.firstName.toLowerCase() === post.taggedUser.toLowerCase() // Match the full name case-insensitively
+          );
+        errorMessage.value = "";
       }
-    };
+
+      if (post.taggedUser) {
+        showList.value = true;
+      } else {
+        showList.value = false;
+      }
+    } else {
+      post.searchedUsers = [];
+      showList.value = false;
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
+
 
     const addTaggedUser = async (uid) => {
       try {
@@ -224,8 +246,7 @@ export default {
           const isUserAlreadyTagged = post.taggedUsers.some(
             (user) => user === uid
           );
-            if (!isUserAlreadyTagged) {
-        
+          if (!isUserAlreadyTagged) {
             taggedErrorMessage.value = "";
             post.taggedUsers.push(uid);
             console.log(post.taggedUsers);
@@ -246,40 +267,51 @@ export default {
       post.taggedUsers.splice(index, 1);
     };
 
+    const cancelButton = () => {
+      router.push("/postList");
+    };
+
     const handlePost = async () => {
       try {
-        (isLoading.value = true), console.log("post", post);
+        isLoading.value = true;
+        if (!post.photo || !post.photo.type.startsWith("image/")) {
+          error.value = "Please select a valid image file for the photo.";
+          isLoading.value = false;
+          return;
+        }
+
         const db = getFirestore();
         const postsRef = collection(db, "posts");
         const now = new Date();
         const auth = getAuth();
         const user = auth.currentUser;
-        if (post.title && post.photo) {
-          const downloadURL = await uploadPostPhoto(user, post.photo);
-          const slug = generateSlug(post.title);
-          const newPostRef = await addDoc(postsRef, {
-            title: post.title,
-            slug: slug,
-            photo: downloadURL,
-            description: post.description,
-            createdAt: now,
-            updatedAt: now,
-            updatedBy: user.uid,
-            taggedUser: post.taggedUsers,
-          });
 
-          const postId = newPostRef.id;
+        const downloadURL = await uploadPostPhoto(user, post.photo);
+        const slug = generateSlug(post.title);
 
-          // Update the post with the generated ID
-          await updateDoc(newPostRef, { uid: postId });
+        const newPostRef = await addDoc(postsRef, {
+          title: post.title,
+          slug: slug,
+          photo: downloadURL,
+          description: post.description,
+          createdAt: now,
+          updatedAt: now,
+          updatedBy: user.uid,
+          taggedUser: post.taggedUsers,
+        });
 
-          isSubmitted.value = true;
-          isLoading.value = false;
-          router.push("/postList");
-        }
+        const postId = newPostRef.id;
+
+        // Update the post with the generated ID
+        await updateDoc(newPostRef, { uid: postId });
+
+        isSubmitted.value = true;
+        isLoading.value = false;
+        router.push("/postList");
       } catch (err) {
         console.log(err);
         error.value = err.message;
+        isLoading.value = false;
       }
     };
 
@@ -297,6 +329,7 @@ export default {
       errorMessage,
       taggedErrorMessage,
       isLoading,
+      cancelButton,
     };
   },
 };

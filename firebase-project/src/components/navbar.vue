@@ -10,14 +10,14 @@
     <div class="router-panel text-white mr-4 flex">
       <button
         @click="$router.push('/register')"
-        v-if=" !isPostRoute && !isPostListRoute && !isSinglePostRoute"
+        v-if="isLoginRoute"
         class="text-navBtn1 bg-navBtn2 border-none mr-2 cursor-pointer text-xs md:text-base lg:text-lg rounded-md p-1 font-bold tracking-widest hover:bg-navBtnHover"
       >
         Register
       </button>
       <button
         @click="$router.push('/login')"
-        v-if="!isLoginPage && !isPostRoute  && !isPostListRoute && !isSinglePostRoute"
+        v-if="isRegisterRoute"
         class="text-navBtn1 bg-navBtn2 border-none mr-2 cursor-pointer text-xs md:text-base lg:text-lg rounded-md p-1 font-bold tracking-widest hover:bg-navBtnHover"
       >
         Login
@@ -35,23 +35,15 @@ export default {
   setup() {
     const router = useRouter();
 
-    const isLoginPage = computed(() => {
+    const isLoginRoute = computed(() => {
       return router.currentRoute.value.path === "/login";
     });
 
-    const isPostRoute = computed(() => {
-      return router.currentRoute.value.path === "/post";
+    const isRegisterRoute = computed(() => {
+      return router.currentRoute.value.path === "/register";
     });
 
-     const isPostListRoute = computed(() => {
-      return router.currentRoute.value.path === "/postList";
-    });
-
-     const isSinglePostRoute = computed(() => {
-      return router.currentRoute.value.name === "single-post";
-    });
-
-    return { isLoginPage,isPostRoute,isPostListRoute,isSinglePostRoute };
+    return { isLoginRoute, isRegisterRoute };
   },
 };
 </script>
