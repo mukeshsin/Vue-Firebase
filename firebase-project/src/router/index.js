@@ -20,7 +20,7 @@ const routes = [
   },
 
   {
-    path: "/post",
+    path: "/create-post",
     name: "post-page",
     component: () =>
       import(/* webpackChunkName: "postPage" */ "../views/post.vue"),
@@ -34,15 +34,13 @@ const routes = [
   },
 
   {
-    path: "/post/:uid",
+    path: "/post/:id",
     name: "single-post",
     component: () =>
       import(
-        /* webpackChunkName: "singlePost" */ "../views/singlePostList.vue"
+        /* webpackChunkName: "singlePostPage" */ "../views/singlePostList.vue"
       ),
   },
-
-
 ];
 
 const router = createRouter({

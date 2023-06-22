@@ -1,5 +1,13 @@
 <template>
   <div>
+    <div class="flex justify-end mr-16 text-lg">
+      <button
+        @click="cancelButton"
+        class="ml-4 bg-blue-500 hover:bg-blue-700 text-white text-md font-bold py-1 px-2 rounded"
+      >
+        cancel
+      </button>
+    </div>
     <div
       class="w-4/5 h-full mb-4 mt-5 sm:mx-auto sm:w-3/4 2xl:w-2/5 2xl:h-full mx-auto rounded-3 bg-customBg pt-10 rounded-9 shadow-white pb-15 box-border"
     >
@@ -26,6 +34,7 @@
           name="photo"
           type="file"
           placeholder="Photo"
+          accept="image/*"
           :rules="validatePhoto"
         />
         <ErrorMessage class="flex text-red-500 mt-0.5" name="photo" />
@@ -79,6 +88,12 @@
             {{ user.firstName }}
           </li>
         </ul>
+        <div
+          v-if="taggedErrorMessage"
+          class="flex items-center justify-between px-2 mt-1 bg-red-100 text-red-700"
+        >
+          {{ taggedErrorMessage }}
+        </div>
 
         <div class="flex flex-wrap mt-3">
           <span
@@ -94,23 +109,13 @@
           </span>
         </div>
 
-        <label class="flex text-white mt-3 mb-1 text-lg">Comment</label>
-        <Field
-          class="w-full border-solid outline-none tracking-wider p-2 text-sm md:text-base lg:text-lg"
-          v-model="post.comments"
-          name="comments"
-          type="comments"
-          placeholder="comment"
-          :rules="validateComment"
-          @click.prevent="addComment"
-        />
-        <ErrorMessage class="flex text-red-500 mt-0.5" name="comments" />
         <span v-if="isLoading">
           <i class="fa fa-spinner fa-spin text-2xl text-white mt-1"></i>
         </span>
         <div>
           <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>
           <button
+            v-if="!disabledPostButton"
             class="w-full h-45 bg-buttonBg mt-3 mb-3 border-0 tracking-wider p-2 md:text-base lg:text-lg mb-6"
           >
             ADD POST
@@ -118,7 +123,7 @@
         </div>
       </Form>
     </div>
-   <div class="ajdustToast">
+    <div class="ajdustToast">
       <successToast v-if="isSubmitted">
         <template v-slot:postContent>Create Post Successfully</template>
       </successToast>
@@ -130,7 +135,7 @@ import { Form, Field, ErrorMessage } from "vee-validate";
 import { validationErr } from "../composables/validation.js";
 import { getAuth } from "firebase/auth";
 import { ref, reactive } from "vue";
-import successToast from "../components/successToast.vue"
+import successToast from "../components/successToast.vue";
 import { uploadPostPhoto } from "../composables/firebase-storage.js";
 import { useRouter } from "vue-router";
 import {
@@ -141,7 +146,6 @@ import {
   query,
   where,
   updateDoc,
-  doc,
 } from "firebase/firestore";
 export default {
   name: "post-page",
@@ -149,7 +153,7 @@ export default {
     Form,
     Field,
     ErrorMessage,
-    successToast
+    successToast,
   },
   setup() {
     const post = reactive({
@@ -160,13 +164,15 @@ export default {
       taggedUsers: [],
       searchedUsers: [],
       users: [],
-      comments: [],
     });
+
     const errorMessage = ref(null);
+    const taggedErrorMessage = ref(null);
     const showList = ref(false);
     const error = ref(null);
     const isSubmitted = ref(false);
     const isLoading = ref(false);
+    const disabledPostButton = ref(false);
     const router = useRouter();
     // Function to generate a unique slug based on the post title
     const generateSlug = (title) => {
@@ -181,9 +187,11 @@ export default {
       try {
         const db = getFirestore();
         const usersRef = collection(db, "users");
+        const queryText = post.taggedUser.toLowerCase().substring(0, 3);
         const userData = query(
           usersRef,
-          where("firstName", "==", post.taggedUser)
+          where("firstName", ">=", queryText),
+          where("firstName", "<=", queryText + "\uf8ff")
         );
         const usersSnap = await getDocs(userData);
         const usersData = usersSnap.docs.map((doc) => doc.data());
@@ -192,13 +200,16 @@ export default {
         console.log(error);
       }
     };
+
     const searchTaggedUsers = async () => {
       try {
         const db = getFirestore();
         const usersRef = collection(db, "users");
+        const queryText = post.taggedUser.toLowerCase().substring(0, 3);
         const userData = query(
           usersRef,
-          where("firstName", "==", post.taggedUser)
+          where("firstName", ">=", queryText),
+          where("firstName", "<=", queryText + "\uf8ff")
         );
         const snapshot = await getDocs(userData);
 
@@ -226,16 +237,21 @@ export default {
     const addTaggedUser = async (uid) => {
       try {
         if (uid) {
-          if (!post.taggedUsers.includes(uid)) {
+          const isUserAlreadyTagged = post.taggedUsers.some(
+            (user) => user === uid
+          );
+          if (!isUserAlreadyTagged) {
+            taggedErrorMessage.value = "";
             post.taggedUsers.push(uid);
+            console.log(post.taggedUsers);
           } else {
-            errorMessage.value = "User already tagged";
+            taggedErrorMessage.value = "User already tagged";
             return;
           }
-
-          post.taggedUser = "";
-          showList.value = false;
         }
+
+        post.taggedUser = "";
+        showList.value = false;
       } catch (error) {
         console.error(error);
       }
@@ -245,58 +261,46 @@ export default {
       post.taggedUsers.splice(index, 1);
     };
 
-    const addComment = async (post) => {
-      const db = getFirestore();
-      const postsRef = collection(db, "posts");
-      const postQuery = query(postsRef, where("uid", "==", post.uid));
-      const postSnapshot = await getDocs(postQuery);
-
-      if (!postSnapshot.empty) {
-        const postDoc = postSnapshot.docs[0];
-        const postRef = doc(postsRef, postDoc.id);
-
-        await updateDoc(postRef, {
-          commentTitle: post.commentTitle,
-        });
-      } else {
-        console.log("Post not found");
-      }
+    const cancelButton = () => {
+      router.push("/postList");
     };
 
     const handlePost = async () => {
       try {
-        (isLoading.value = true), console.log("post", post);
+        isLoading.value = true;
+        disabledPostButton.value = true;
         const db = getFirestore();
         const postsRef = collection(db, "posts");
         const now = new Date();
         const auth = getAuth();
         const user = auth.currentUser;
-        if (post.title && post.photo) {
-          const downloadURL = await uploadPostPhoto(user, post.photo);
-          const slug = generateSlug(post.title);
-          const newPostRef = await addDoc(postsRef, {
-            title: post.title,
-            slug: slug,
-            photo: downloadURL,
-            description: post.description,
-            createdAt: now,
-            updatedAt: now,
-            updatedBy: user.uid,
-            taggedUser: post.taggedUsers,
-          });
 
-          const postId = newPostRef.id;
+        const downloadURL = await uploadPostPhoto(user, post.photo);
+        const slug = generateSlug(post.title);
+        const newPostRef = await addDoc(postsRef, {
+          title: post.title,
+          slug: slug,
+          photo: downloadURL,
+          description: post.description,
+          createdAt: now,
+          updatedAt: now,
+          updatedBy: user.uid,
+          taggedUser: post.taggedUsers,
+        });
 
-          // Update the post with the generated ID
-          await updateDoc(newPostRef, { uid: postId });
+        const postId = newPostRef.id;
 
-          isSubmitted.value = true;
-          isLoading.value = false;
-          router.push("/postList");
-        }
+        // Update the post with the generated ID
+        await updateDoc(newPostRef, { uid: postId });
+
+        isSubmitted.value = true;
+        isLoading.value = false;
+
+        router.push("/postList");
       } catch (err) {
         console.log(err);
         error.value = err.message;
+        isLoading.value = false;
       }
     };
 
@@ -312,8 +316,10 @@ export default {
       searchTaggedUsers,
       removeTaggedUser,
       errorMessage,
+      taggedErrorMessage,
       isLoading,
-      addComment,
+      cancelButton,
+      disabledPostButton,
     };
   },
 };

@@ -7,8 +7,20 @@
       <i class="fa fa-spinner fa-spin text-4xl text-grey-500"></i>
     </div>
 
-    <div class="max-w-5xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-      <h1 class="text-4xl font-bold text-grey-500 mb-4 font-sans">POSTS</h1>
+    <div class="max-w-full mx-auto py-12 px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-end">
+        <button
+          v-if="showCreatePostButton"
+          @click="goBackPost"
+          class="ml-4 bg-blue-500 hover:bg-blue-700 text-white text-md font-bold py-1 px-2 rounded"
+        >
+          Create Post
+        </button>
+      </div>
+      <h1 class="text-4xl font-bold text-grey-500 mb-3 mt-0 font-sans">
+        POSTS
+      </h1>
+
       <ul
         class="grid grid-cols-1 gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3"
       >
@@ -20,7 +32,8 @@
           <img
             class="h-48 w-full mx-auto object-cover"
             :src="post.photo"
-            alt=""
+            alt="postimage"
+            @click="showPostDetail(post.id)"
           />
           <div class="p-4">
             <h2
@@ -32,22 +45,91 @@
               {{ post.description }}
             </p>
 
-            <p v-if="post.taggedUser" class="mt-2 text-xs text-gray-700">
+            <p
+              v-if="post.taggedUser && post.taggedUser.length"
+              class="mt-2 text-xs text-gray-700"
+            >
               <span class="text-gray-600 font-semibold">Tagged User:</span>
-              <span class="text-gray-800 leading-normal">{{
-                post.taggedUser
-              }}</span>
+              <span
+                class="text-gray-800 leading-normal block"
+                v-for="user in post.taggedUser"
+                :key="user.email"
+                >{{ user.email }}</span
+              >
             </p>
             <p v-else class="mt-2 text-sm text-gray-700 tracking-wide" disabled>
               Tagged User: N/A
             </p>
+          </div>
+          <div class="bg-grey-500">
+            <i
+              class="fa-sharp fa-solid fa-comment text-blue-500 text-lg mr-8 p-2"
+              @click="handleAddComment(post.id)"
+            ></i>
+          </div>
+          <div class="w-96 mt-2 mb-2 flex" v-if="showInput === post.id">
+            <input
+              class="w-48 h-8 ml-4 border-solid border-slate-950 outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg border-2 md:ml-10 lg:ml-5 xl:w-72 xl:ml-20"
+              name="comment"
+              type="text"
+              placeholder="Add/Update Comment"
+              v-model="comment.commentTitle"
+            />
             <button
-              v-if="posts.length > 0"
-              @click="showPostDetail(post.uid)"
-              class="mt-3 bg-blue-500 hover:bg-blue-700 text-white font-bold text-xs py-1 px-1 rounded"
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded mr-4 ml-2 h-8"
+              @click="submitComment(post.id)"
             >
-              View Details <i class="fa-solid fa-arrow-right"></i>
+              Submit
             </button>
+          </div>
+
+          <div>
+            <ul class="mt-2">
+              <li v-for="comment in post.comments" :key="comment.id">
+                <div v-if="!comment.isEditing">
+                  <p
+                    class="text-sm text-gray-600 border-2 border-slate-950 w-64 ml-4 mb-2 p-1 md:ml-10 lg:ml-5 xl:ml-24"
+                  >
+                    {{ comment.commentTitle }}
+                    <span class="ml-2">
+                      <i
+                        class="fas fa-edit text-blue-500 cursor-pointer"
+                        @click="editCommentInput(comment)"
+                      ></i>
+                    </span>
+                    <span class="ml-2">
+                      <i
+                        class="fas fa-trash text-red-500 cursor-pointer"
+                        @click="deleteComment(post.id, comment.id)"
+                      ></i>
+                    </span>
+                  </p>
+                </div>
+                <div v-else>
+                  <div
+                    class="flex flex-col items-center sm:flex-row md:flex-col"
+                  >
+                    <input
+                      class="w-48 h-8 mb-1 border-solid border-slate-950 outline-none tracking-wider bg-white p-2 text-sm md:text-base lg:text-lg border-2 xl:w-72"
+                      :value="comment.commentTitle"
+                      @input="updateCommentInput(comment, $event.target.value)"
+                    />
+                    <button
+                      class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-2 rounded h-8 w-32 mb-1"
+                      @click="saveComment(post.id, comment)"
+                    >
+                      Save
+                    </button>
+                    <button
+                      class="bg-red-500 hover:bg-red-700 text-white font-bold mb-2 py-1 px-2 rounded h-8 w-32"
+                      @click="cancelEditComment(comment)"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </li>
+            </ul>
           </div>
         </li>
       </ul>
@@ -73,24 +155,33 @@ import {
   limit,
   startAfter,
 } from "firebase/firestore";
-import { ref, computed } from "vue";
+import { ref, computed, reactive } from "vue";
 import { useRouter } from "vue-router";
+import { functions } from "../composables/commentApi";
 
 export default {
   name: "post-list",
+
   setup() {
     const router = useRouter();
     const posts = ref([]);
-    const batchSize = 5; // Number of posts to load per batch
+    const batchSize = 5;
     const lastVisiblePost = ref(null);
     const isLoading = ref(false);
+    const comment = reactive({
+      commentTitle: "",
+    });
 
     const db = getFirestore();
     const postsRef = collection(db, "posts");
 
     const getAllPosts = async () => {
       isLoading.value = true;
-      const postData = query(postsRef, orderBy("createdAt", "desc"), limit(batchSize));
+      const postData = query(
+        postsRef,
+        orderBy("createdAt", "desc"),
+        limit(batchSize)
+      );
       const querySnapshot = await getDocs(postData);
       posts.value = querySnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -121,8 +212,8 @@ export default {
       isLoading.value = false;
     };
 
-    const showPostDetail = (key) => {
-      router.push(`/single-post/${key}`);
+    const showPostDetail = (id) => {
+      router.push(`/post/${id}`);
     };
 
     const showLoadMoreButton = computed(() => {
@@ -131,12 +222,24 @@ export default {
 
     getAllPosts();
 
+    const goBackPost = () => {
+      router.push("/create-post");
+    };
+
+    const showCreatePostButton = computed(() => {
+      return lastVisiblePost.value !== null;
+    });
+
     return {
       posts,
       loadMorePosts,
       showLoadMoreButton,
+      showCreatePostButton,
       isLoading,
       showPostDetail,
+      goBackPost,
+      ...functions(),
+      comment,
     };
   },
 };
