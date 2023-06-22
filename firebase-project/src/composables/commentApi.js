@@ -1,18 +1,34 @@
 import { getFirestore, doc, getDoc, updateDoc } from "firebase/firestore";
-import { ref, reactive } from "vue";
-import { getAuth } from "firebase/auth";
+import { ref, reactive, watchEffect } from "vue";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+
 export const functions = () => {
   const db = getFirestore();
   const now = new Date();
   const auth = getAuth();
-  const user = auth.currentUser;
+
+  const user = ref(null);
+
+  onAuthStateChanged(auth, (currentUser) => {
+    user.value = currentUser;
+  });
 
   const comment = reactive({
     commentTitle: "",
-    userId: user ? user.uid : null,
-    createdAt: now,
-    updatedAt: now,
+    userId: null,
+
+    createdAt: now.toISOString().split("T")[0], // Get the date in 'YYYY-MM-DD' format,
+    updatedAt: now.toISOString().split("T")[0], // Get the date in 'YYYY-MM-DD' format
   });
+
+  watchEffect(() => {
+    if (user.value) {
+      comment.userId = user.value.uid; // Update the userId when user changes
+    } else {
+      comment.userId = null;
+    }
+  });
+
   const showInput = ref(false);
 
   const handleAddComment = (postId) => {
@@ -20,8 +36,6 @@ export const functions = () => {
   };
 
   const submitComment = async () => {
-    const db = getFirestore();
-
     const postRef = doc(db, "posts", showInput.value);
 
     try {
@@ -114,6 +128,7 @@ export const functions = () => {
   };
 
   return {
+    comment,
     editCommentInput,
     updateCommentInput,
     cancelEditComment,

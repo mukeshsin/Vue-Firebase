@@ -115,6 +115,7 @@
         <div>
           <div v-if="error" class="flex text-red-500 mt-0.5">{{ error }}</div>
           <button
+            v-if="!disabledPostButton"
             class="w-full h-45 bg-buttonBg mt-3 mb-3 border-0 tracking-wider p-2 md:text-base lg:text-lg mb-6"
           >
             ADD POST
@@ -171,6 +172,7 @@ export default {
     const error = ref(null);
     const isSubmitted = ref(false);
     const isLoading = ref(false);
+    const disabledPostButton = ref(false);
     const router = useRouter();
     // Function to generate a unique slug based on the post title
     const generateSlug = (title) => {
@@ -183,62 +185,54 @@ export default {
 
     const getUsers = async () => {
       try {
-        if (post.taggedUser.length >= 3) {
-          // Check if at least 3 letters are entered
-          const db = getFirestore();
-          const usersRef = collection(db, "users");
-          const userData = query(
-            usersRef,
-            where("firstName", "==", post.taggedUser)
-          );
-          const usersSnap = await getDocs(userData);
-          const usersData = usersSnap.docs.map((doc) => doc.data());
-          post.users = usersData;
-        } else {
-          post.users = []; // Clear the users list if the input is less than 3 letters
-        }
+        const db = getFirestore();
+        const usersRef = collection(db, "users");
+        const queryText = post.taggedUser.toLowerCase().substring(0, 3);
+        const userData = query(
+          usersRef,
+          where("firstName", ">=", queryText),
+          where("firstName", "<=", queryText + "\uf8ff")
+        );
+        const usersSnap = await getDocs(userData);
+        const usersData = usersSnap.docs.map((doc) => doc.data());
+        post.users = usersData;
       } catch (error) {
         console.log(error);
       }
     };
+
     const searchTaggedUsers = async () => {
-  try {
-    if (post.taggedUser.length >= 3) {
-      const db = getFirestore();
-      const usersRef = collection(db, "users");
-      const userData = query(
-        usersRef,
-        where("firstName", "==", post.taggedUser)
-      );
-      const snapshot = await getDocs(userData);
+      try {
+        const db = getFirestore();
+        const usersRef = collection(db, "users");
+        const queryText = post.taggedUser.toLowerCase().substring(0, 3);
+        const userData = query(
+          usersRef,
+          where("firstName", ">=", queryText),
+          where("firstName", "<=", queryText + "\uf8ff")
+        );
+        const snapshot = await getDocs(userData);
 
-      if (snapshot.empty) {
-        post.searchedUsers = [];
-        errorMessage.value = "User not found";
-      } else {
-        post.searchedUsers = snapshot.docs
-          .map((doc) => ({ id: doc.id, ...doc.data() }))
-          .filter(
-            (user) =>
-              user.firstName.toLowerCase() === post.taggedUser.toLowerCase() // Match the full name case-insensitively
-          );
-        errorMessage.value = "";
+        if (snapshot.empty) {
+          post.searchedUsers = [];
+          errorMessage.value = "User not found";
+        } else {
+          post.searchedUsers = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          errorMessage.value = "";
+        }
+
+        if (post.taggedUser) {
+          showList.value = true;
+        } else {
+          showList.value = false;
+        }
+      } catch (error) {
+        console.error(error);
       }
-
-      if (post.taggedUser) {
-        showList.value = true;
-      } else {
-        showList.value = false;
-      }
-    } else {
-      post.searchedUsers = [];
-      showList.value = false;
-    }
-  } catch (error) {
-    console.error(error);
-  }
-};
-
+    };
 
     const addTaggedUser = async (uid) => {
       try {
@@ -274,12 +268,7 @@ export default {
     const handlePost = async () => {
       try {
         isLoading.value = true;
-        if (!post.photo || !post.photo.type.startsWith("image/")) {
-          error.value = "Please select a valid image file for the photo.";
-          isLoading.value = false;
-          return;
-        }
-
+        disabledPostButton.value = true;
         const db = getFirestore();
         const postsRef = collection(db, "posts");
         const now = new Date();
@@ -288,7 +277,6 @@ export default {
 
         const downloadURL = await uploadPostPhoto(user, post.photo);
         const slug = generateSlug(post.title);
-
         const newPostRef = await addDoc(postsRef, {
           title: post.title,
           slug: slug,
@@ -307,6 +295,7 @@ export default {
 
         isSubmitted.value = true;
         isLoading.value = false;
+
         router.push("/postList");
       } catch (err) {
         console.log(err);
@@ -330,6 +319,7 @@ export default {
       taggedErrorMessage,
       isLoading,
       cancelButton,
+      disabledPostButton,
     };
   },
 };

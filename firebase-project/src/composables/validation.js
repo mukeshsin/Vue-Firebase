@@ -111,8 +111,11 @@ export const validationErr = () => {
     if (!file) {
       return "This field is required";
     }
-    if (file.size < 5000000) {
-      return "This file must be more than or equal to 5MB";
+    if (file.size < 4000000) {
+      return "This file must be more than or equal to 4MB";
+    }
+    if (!file.type.startsWith("image/")) {
+      return "Please select a valid image file for the photo.";
     }
     return true;
   };
